@@ -1,0 +1,84 @@
+# Compiled output
+/dist
+/build
+
+# Dependencies
+/node_modules
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# OS files
+.DS_Store
+*.pem
+
+# Tests
+/coverage
+/.nyc_output
+
+# IDEs & Editors
+/.idea
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# Environment variables
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+.env*.local
+
+# Temporary files
+.temp
+.tmp
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Diagnostic reports
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Expo
+.expo/
+web-build/
+expo-env.d.ts
+
+# Native build artifacts
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro bundler
+.metro-health-check*
+
+# TypeScript
+*.tsbuildinfo
+
+# Miscellaneous
+app-example
