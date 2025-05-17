@@ -5,6 +5,8 @@ A repository containing two standalone applications:
 - **Backend**: NestJS REST API using TypeORM (SQLite for dev, PostgreSQL for prod).
 - **Client**: React Native app powered by Expo, consuming the backend API.
 
+\*Uses https://wix.github.io/react-native-ui-lib/ for UI reusables
+
 ## Structure
 
 ```
