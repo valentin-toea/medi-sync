@@ -42,10 +42,7 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <SafeAreaView style={{ flex: 1 }} edges={["top", "left", "right"]}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" />
-        </Stack>
+        <Stack screenOptions={{ headerShown: false }} />
         <StatusBar style="auto" />
       </SafeAreaView>
     </ThemeProvider>
