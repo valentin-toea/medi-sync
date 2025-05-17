@@ -4,7 +4,13 @@ import { Bell } from "lucide-react-native";
 import { StyleSheet } from "react-native";
 import { Avatar, Button, Colors, Text, View } from "react-native-ui-lib";
 
-export function TopBar() {
+export function TopBar({
+  hideUser,
+  hideNotifications,
+}: {
+  hideUser?: boolean;
+  hideNotifications?: boolean;
+}) {
   const user = { name: "Test User", title: "Doctor" };
 
   return (
@@ -18,11 +24,11 @@ export function TopBar() {
               .join("")
               .toUpperCase()}
             backgroundColor={Colors.grey60}
-            size={40}
+            size={30}
           />
           <View style={styles.textContainer}>
             <Text style={styles.userName}>{user.name}</Text>
-            <Text>{user.title}</Text>
+            <Text style={styles.userTitle}>{user.title}</Text>
           </View>
         </View>
         <Button
@@ -43,10 +49,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     zIndex: 10,
     elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.grey60,
   },
   topBar: {
     flexDirection: "row",
@@ -65,8 +69,11 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   userName: {
-    fontSize: 16,
+    fontSize: 14,
     color: Colors.text,
     fontWeight: "600",
+  },
+  userTitle: {
+    fontSize: 12,
   },
 });
