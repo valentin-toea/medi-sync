@@ -82,3 +82,7 @@ expo-env.d.ts
 
 # Miscellaneous
 app-example
+
+
+ios/
+android/
