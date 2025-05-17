@@ -45,7 +45,6 @@ const BottomSheet = forwardRef<BottomSheetHandle, BottomSheetProps>(
   ) => {
     const sheetRef = useRef<ActionSheetRef>(null);
 
-    // Expose imperative methods to parent (optional)
     useImperativeHandle(ref, () => ({
       show: () => sheetRef.current?.show(),
       hide: () => sheetRef.current?.hide(),
@@ -64,9 +63,10 @@ const BottomSheet = forwardRef<BottomSheetHandle, BottomSheetProps>(
       <ActionSheet
         ref={sheetRef}
         gestureEnabled
-        containerStyle={{
-          ...StyleSheet.flatten([styles.sheetContainer, containerStyle]),
-        }}
+        containerStyle={StyleSheet.flatten([
+          styles.sheetContainer,
+          containerStyle,
+        ])}
         onClose={onClose}
       >
         <View style={styles.heightContainer}>

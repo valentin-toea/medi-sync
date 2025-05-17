@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Calendar } from "react-native-calendars";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { Button, Card, Colors, Text } from "react-native-ui-lib";
+import { Button, Colors, Text } from "react-native-ui-lib";
 import ScheduleItem from "@/components/ScheduleItem";
 import { TopBar } from "@/components/TopBar";
 import BottomSheet from "@/components/BottomSheet";
