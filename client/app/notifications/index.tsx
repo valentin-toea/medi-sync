@@ -29,7 +29,7 @@ export default function NotificationScreen() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
-          <CustomCard style={styles.card}>
+          <CustomCard>
             <Text style={styles.title}>{item.title}</Text>
             <Text style={styles.message}>{item.message}</Text>
           </CustomCard>
@@ -54,12 +54,9 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: 32,
-    paddingLeft: 24,
-    paddingRight: 24,
+    paddingLeft: 20,
+    paddingRight: 20,
     paddingTop: 24,
-  },
-  card: {
-    marginBottom: 8,
   },
   title: {
     fontSize: 16,
@@ -72,6 +69,6 @@ const styles = StyleSheet.create({
     color: Colors.grey30,
   },
   separator: {
-    height: 12,
+    height: 8,
   },
 });

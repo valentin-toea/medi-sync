@@ -11,32 +11,38 @@ export function TopBar({
   hideUser?: boolean;
   hideNotifications?: boolean;
 }) {
-  const user = { name: "Test User", title: "Doctor" };
+  const user = { name: "Dr. Test User" };
 
   return (
     <View style={styles.topBarWrapper}>
       <View style={styles.topBar}>
         <View style={styles.avatarGroup}>
-          <Avatar
-            label={user.name
-              .split(" ")
-              .map((n) => n[0])
-              .join("")
-              .toUpperCase()}
-            backgroundColor={Colors.grey60}
-            size={30}
-          />
-          <View style={styles.textContainer}>
-            <Text style={styles.userName}>{user.name}</Text>
-            <Text style={styles.userTitle}>{user.title}</Text>
-          </View>
+          {!hideUser && (
+            <>
+              <Avatar
+                label={user.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .slice(0, 2)
+                  .toUpperCase()}
+                backgroundColor={Colors.grey60}
+                size={30}
+              />
+              <View style={styles.textContainer}>
+                <Text style={styles.userName}>{user.name}</Text>
+              </View>
+            </>
+          )}
         </View>
-        <Button
-          iconSource={() => <Bell size={20} color={Colors.grey30} />}
-          backgroundColor={Colors.transparent}
-          style={{ padding: 4 }}
-          onPress={() => router.push("/notifications")}
-        />
+        {!hideNotifications && (
+          <Button
+            iconSource={() => <Bell size={20} color={Colors.grey30} />}
+            backgroundColor={Colors.transparent}
+            style={{ padding: 4 }}
+            onPress={() => router.push("/notifications")}
+          />
+        )}
       </View>
     </View>
   );
@@ -69,11 +75,8 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   userName: {
-    fontSize: 14,
+    fontSize: 16,
     color: Colors.text,
-    fontWeight: "600",
-  },
-  userTitle: {
-    fontSize: 12,
+    fontWeight: "500",
   },
 });

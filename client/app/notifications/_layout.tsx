@@ -1,5 +1,6 @@
 import { HeaderBackButton } from "@react-navigation/elements";
 import { router, Stack } from "expo-router";
+import { Colors } from "react-native-ui-lib";
 
 export default function NotificationsLayout() {
   return (
@@ -10,7 +11,7 @@ export default function NotificationsLayout() {
         headerLeft: () => (
           <HeaderBackButton
             onPress={() => router.back()}
-            tintColor="#0a7ea4"
+            tintColor={Colors.green20}
             label="Back"
           />
         ),
