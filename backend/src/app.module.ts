@@ -2,7 +2,11 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { setDatabase } from './set-db';
-import { UsersModule } from './users/users.module';
+import { UsersModule } from './user/users.module';
+import { ScheduleModule } from './schedule/schedule.module';
+import { SeederService } from './seeder/seeder.service';
+import { User } from './user/user.entity';
+import { ScheduleItem } from './schedule/schedule-item.entity';
 
 @Module({
   imports: [
@@ -15,7 +19,10 @@ import { UsersModule } from './users/users.module';
       inject: [ConfigService],
       useFactory: setDatabase,
     }),
+    TypeOrmModule.forFeature([User, ScheduleItem]),
     UsersModule,
+    ScheduleModule,
   ],
+  providers: [SeederService],
 })
 export class AppModule {}
