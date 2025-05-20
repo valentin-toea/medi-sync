@@ -6,6 +6,7 @@ import ScheduleItem from "@/components/ScheduleItem";
 import { TopBar } from "@/components/TopBar";
 import BottomSheet from "@/components/BottomSheet";
 import { CustomCard } from "@/components/CustomCard";
+import { Clock } from "lucide-react-native";
 
 export default function HomeScreen() {
   const [showFullSchedule, setShowFullSchedule] = useState(false);
@@ -24,6 +25,7 @@ export default function HomeScreen() {
           <View style={styles.clockContainer}>
             <Text style={styles.cardText}>Current Status</Text>
             <Text style={styles.cardSubText}>Clocked out</Text>
+            <Clock size={50} />
           </View>
           <Button
             label="Clock In"
@@ -139,17 +141,17 @@ const styles = StyleSheet.create({
   },
   cardText: {
     fontSize: 16,
-    marginBottom: 12,
   },
   cardSubText: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 500,
+    marginBottom: 8,
   },
   clockContainer: {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 12,
   },
   timeoffCard: {
     display: "flex",
