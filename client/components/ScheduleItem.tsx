@@ -5,10 +5,12 @@ export default function ScheduleItem({
   name,
   startTime,
   endTime,
+  status,
 }: {
   name: string;
   startTime: string;
   endTime: string;
+  status?: string;
 }) {
   return (
     <Card style={styles.card}>
@@ -16,13 +18,23 @@ export default function ScheduleItem({
         <Text style={styles.nameText}>{name}</Text>
         <Text>{`${startTime} - ${endTime}`}</Text>
       </View>
-      <Badge
-        label="Now"
-        backgroundColor={Colors.green20}
-        size={30}
-        labelStyle={styles.badgeText}
-        containerStyle={styles.badge}
-      />
+      {status === "now" ? (
+        <Badge
+          label="Now"
+          backgroundColor={Colors.green20}
+          size={30}
+          labelStyle={styles.badgeText}
+          containerStyle={styles.badge}
+        />
+      ) : (
+        <Badge
+          label={status === "upcoming" ? "Upcoming" : "Past"}
+          backgroundColor={Colors.grey20}
+          size={30}
+          labelStyle={styles.badgeText}
+          containerStyle={styles.badge}
+        />
+      )}
     </Card>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Calendar } from "react-native-calendars";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Button, Colors, Text } from "react-native-ui-lib";
@@ -6,10 +6,32 @@ import ScheduleItem from "@/components/ScheduleItem";
 import { TopBar } from "@/components/TopBar";
 import BottomSheet from "@/components/BottomSheet";
 import { CustomCard } from "@/components/CustomCard";
-import { Clock } from "lucide-react-native";
+import { Clock, Loader } from "lucide-react-native";
+import { useUserSchedule } from "@/hooks/useUserSchedule";
+import { getScheduleStatus } from "@/utils/getScheduleStatus";
 
 export default function HomeScreen() {
+  const userId = 2;
+  const {
+    data: scheduleList,
+    isLoading: isScheduleLoading,
+    error,
+  } = useUserSchedule(userId);
   const [showFullSchedule, setShowFullSchedule] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  const shortScheduleList = useMemo(
+    () => scheduleList?.slice(0, 3),
+    [scheduleList]
+  );
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -43,16 +65,27 @@ export default function HomeScreen() {
         {/* Schedule Section */}
         <View>
           <Text style={styles.sectionTitle}>{"Today's Schedule"}</Text>
-          {[1, 2, 3].map((item, idx) => (
-            <ScheduleItem
-              key={idx}
-              name={"Task Example"}
-              startTime={"7:00 AM"}
-              endTime={"10:00 AM"}
-            />
-          ))}
+          {!isScheduleLoading ? (
+            shortScheduleList?.map((item) => {
+              return (
+                <ScheduleItem
+                  key={item.id.toString()}
+                  name={item.name}
+                  startTime={item.startDateTime}
+                  endTime={item.endDateTime}
+                  status={getScheduleStatus(
+                    item.startDate,
+                    item.endDate,
+                    currentTime
+                  )}
+                />
+              );
+            })
+          ) : (
+            <Loader style={{ alignSelf: "center", margin: 12 }} />
+          )}
           <Button
-            label="See all"
+            label="See Full Schedule"
             outline
             outlineColor={Colors.black}
             borderRadius={12}
@@ -63,14 +96,23 @@ export default function HomeScreen() {
             visible={showFullSchedule}
             onClose={() => setShowFullSchedule(false)}
           >
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((item, idx) => (
-              <ScheduleItem
-                key={idx}
-                name={"Task Example"}
-                startTime={"7:00 AM"}
-                endTime={"10:00 AM"}
-              />
-            ))}
+            {!isScheduleLoading ? (
+              scheduleList?.map((item, idx) => (
+                <ScheduleItem
+                  key={item.id.toString()}
+                  name={item.name}
+                  startTime={item.startDateTime}
+                  endTime={item.endDateTime}
+                  status={getScheduleStatus(
+                    item.startDate,
+                    item.endDate,
+                    currentTime
+                  )}
+                />
+              ))
+            ) : (
+              <Loader style={{ alignSelf: "center", margin: 12 }} />
+            )}
           </BottomSheet>
         </View>
 
