@@ -106,12 +106,13 @@ const styles = StyleSheet.create({
   },
   heightContainer: { maxHeight: MAX_HEIGHT },
   scrollViewContent: {
-    padding: 24,
+    padding: 20,
     marginBottom: 32,
   },
   title: {
     fontSize: 20,
     fontWeight: "600",
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
 });
