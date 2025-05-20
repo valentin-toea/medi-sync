@@ -6,7 +6,8 @@ export const setDatabase = (
   config: ConfigService,
 ): Promise<TypeOrmModuleOptions> | TypeOrmModuleOptions => {
   const type = config.get<string>('DB_TYPE', 'sqlite') as DatabaseType;
-  const synchronize = config.get<boolean>('DB_SYNCHRONIZE', false);
+  // const synchronize = config.get<boolean>('DB_SYNCHRONIZE', false);
+  const synchronize = true;
 
   if (type === 'postgres') {
     return {
