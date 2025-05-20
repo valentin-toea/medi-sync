@@ -86,4 +86,6 @@ app-example
 
 ios/
 android/
-backend/dev.sqlite
+
+# Local database file
+dev.sqlite
