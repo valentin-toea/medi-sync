@@ -1,14 +1,14 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Calendar } from "react-native-calendars";
-import { ScrollView, StyleSheet, View } from "react-native";
-import { Button, Colors, Text } from "react-native-ui-lib";
-import ScheduleItem from "@/components/ScheduleItem";
-import { TopBar } from "@/components/TopBar";
 import BottomSheet from "@/components/BottomSheet";
 import { CustomCard } from "@/components/CustomCard";
-import { Clock, Loader } from "lucide-react-native";
+import ScheduleItem from "@/components/ScheduleItem";
+import { TopBar } from "@/components/TopBar";
 import { useUserSchedule } from "@/hooks/useUserSchedule";
 import { getScheduleStatus } from "@/utils/getScheduleStatus";
+import { Clock, Loader } from "lucide-react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { Calendar } from "react-native-calendars";
+import { Button, Colors, Text } from "react-native-ui-lib";
 
 export default function HomeScreen() {
   const userId = 2;
