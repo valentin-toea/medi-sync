@@ -119,11 +119,11 @@ export default function LeaveScreen() {
 
       {/* Modal */}
       <BottomSheet
+        title={"Leave Request"}
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
       >
         <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Leave Request</Text>
           <Text style={styles.modalSubtitle}>Select period</Text>
 
           {/* Start Date Picker Trigger */}
@@ -249,16 +249,9 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: Colors.white,
-    borderRadius: 16,
-    paddingHorizontal: 20,
   },
   modalClose: {
     alignSelf: "flex-end",
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginTop: 8,
   },
   modalSubtitle: {
     fontSize: 14,
