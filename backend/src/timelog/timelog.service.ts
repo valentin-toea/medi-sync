@@ -4,7 +4,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { TimeLog, TimeLogStatus } from './timelog.entity';
 import { User } from '../user/user.entity';
 import { CreateTimeLogDto, CheckOutDto } from './dto/create-timelog.dto';
@@ -26,15 +26,21 @@ export class TimeLogService {
       throw new NotFoundException(`User #${createTimeLogDto.userId} not found`);
     }
 
-    const today = createTimeLogDto.date
+    // Get the date to match (either from DTO or today)
+    const baseDate = createTimeLogDto.date
       ? new Date(createTimeLogDto.date)
       : new Date();
-    today.setHours(0, 0, 0, 0);
+
+    // Set start and end of the day
+    const startOfDay = new Date(baseDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(baseDate);
+    endOfDay.setHours(23, 59, 59, 999);
 
     const existingCheckIn = await this.timeLogRepository.findOne({
       where: {
         userId: createTimeLogDto.userId,
-        date: today,
+        date: Between(startOfDay, endOfDay),
       },
     });
 
@@ -47,14 +53,14 @@ export class TimeLogService {
       timeLogEntry = this.timeLogRepository.create({
         user,
         userId: createTimeLogDto.userId,
-        date: today,
+        date: baseDate,
         status: TimeLogStatus.PENDING, // Or derive based on schedule
       });
     }
 
     timeLogEntry.checkIn = new Date(createTimeLogDto.checkInTime);
     timeLogEntry.gpsLocationCheckIn = createTimeLogDto.gpsLocationCheckIn;
-    // Potentially add logic to validate against user's schedule if needed
+    // TODO: check gpsLocationCheckIn for validity if needed
 
     return this.timeLogRepository.save(timeLogEntry);
   }
@@ -70,10 +76,19 @@ export class TimeLogService {
     const today = new Date(); // Assume checkout is for the current day of the check-in
     today.setHours(0, 0, 0, 0);
 
+    // Get the date to match (either from DTO or today)
+    const baseDate = new Date();
+
+    // Set start and end of the day
+    const startOfDay = new Date(baseDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(baseDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
     const timeLogEntry = await this.timeLogRepository.findOne({
       where: {
         userId: checkOutDto.userId,
-        date: today, // find the entry for today
+        date: Between(startOfDay, endOfDay),
       },
     });
 
@@ -89,6 +104,7 @@ export class TimeLogService {
     timeLogEntry.checkOut = new Date(checkOutDto.checkOutTime);
     timeLogEntry.gpsLocationCheckOut = checkOutDto.gpsLocationCheckOut;
     timeLogEntry.status = TimeLogStatus.VALID; // Or PENDING_VALIDATION etc.
+    // TODO: check gpsLocationCheckIn for validity if needed
 
     return this.timeLogRepository.save(timeLogEntry);
   }
@@ -97,11 +113,15 @@ export class TimeLogService {
     userId: number,
     date: string,
   ): Promise<TimeLog | null> {
-    const queryDate = new Date(date);
+    const queryDate = date ? new Date(date) : new Date();
+    const startOfDay = new Date(queryDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(queryDate);
+    endOfDay.setHours(23, 59, 59, 999);
     return this.timeLogRepository.findOne({
       where: {
         userId,
-        date: queryDate,
+        date: Between(startOfDay, endOfDay),
       },
       relations: ['user'],
     });

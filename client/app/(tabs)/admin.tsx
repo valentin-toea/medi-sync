@@ -27,9 +27,7 @@ export default function AdminScreen() {
   const [tab, setTab] = useState(0);
   const [showShiftDetails, setShowShiftDetails] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [selectedReplacement, setSelectedReplacement] = useState<string | null>(
-    null
-  );
+  const [selectedReplacement, setSelectedReplacement] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
     return today.toISOString().split("T")[0];
@@ -43,7 +41,7 @@ export default function AdminScreen() {
   }, [tab]);
 
   const renderDoctorList = () => (
-    <ScrollView style={{ paddingHorizontal: 20 }}>
+    <ScrollView style={styles.scrollContainer}>
       {doctors.map((doc, idx) => (
         <TouchableOpacity
           key={idx}
@@ -75,7 +73,6 @@ export default function AdminScreen() {
       return d;
     });
 
-    // This could be replaced with an API call filtered by selectedDate
     const departmentsForDate = [
       "Pediatrics",
       "Dermatology",
@@ -97,16 +94,10 @@ export default function AdminScreen() {
                 onPress={() => setSelectedDate(dateStr)}
                 style={[styles.dayCell, isSelected && styles.selectedDay]}
               >
-                <Text
-                  style={isSelected ? styles.selectedDayText : styles.dayText}
-                >
-                  {date
-                    .toLocaleDateString("en-US", { weekday: "short" })
-                    .toUpperCase()}
+                <Text style={isSelected ? styles.selectedDayText : styles.dayText}>
+                  {date.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase()}
                 </Text>
-                <Text
-                  style={isSelected ? styles.selectedDayText : styles.dayText}
-                >
+                <Text style={isSelected ? styles.selectedDayText : styles.dayText}>
                   {date.getDate()}
                 </Text>
               </TouchableOpacity>
@@ -114,32 +105,24 @@ export default function AdminScreen() {
           })}
         </View>
 
-        <ScrollView>
+        <ScrollView style={styles.scrollContainer}>
           {departmentsForDate.map((dept, idx) => (
             <TouchableOpacity
               key={idx}
-              onPress={() =>
-                dept === "Pediatrics" ? setShowShiftDetails(true) : {}
-              }
-              style={styles.card}
+              onPress={() => dept === "Pediatrics" ? setShowShiftDetails(true) : {}}
+              style={{ marginBottom: 12 }}
             >
-              <View>
-                <Text
-                  style={[
-                    styles.doctorName,
-                    dept === "Pediatrics" && { color: Colors.red30 },
-                  ]}
-                >
-                  {" "}
-                  {dept.toUpperCase()}{" "}
-                </Text>
-                {dept === "Pediatrics" && (
-                  <Text style={{ color: Colors.red30 }}>
-                    INSUFFICIENT STAFF
+              <CustomCard>
+                <View>
+                  <Text style={[styles.doctorName, dept === "Pediatrics" && { color: Colors.red30 }]}>
+                    {dept.toUpperCase()}
                   </Text>
-                )}
-              </View>
-              <Text style={styles.detailsButton}>DETAILS</Text>
+                  {dept === "Pediatrics" && (
+                    <Text style={{ color: Colors.red30 }}>INSUFFICIENT STAFF</Text>
+                  )}
+                </View>
+                <Text style={styles.detailsButton}>DETAILS</Text>
+              </CustomCard>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -148,10 +131,8 @@ export default function AdminScreen() {
   };
 
   const renderShiftDetails = () => (
-    <View>
-      <Text style={styles.shiftHeader}>
-        PEDIATRICS {selectedDate.split("-").reverse().join(".")}
-      </Text>
+    <ScrollView style={styles.scrollContainer}>
+      <Text style={styles.shiftHeader}>PEDIATRICS {selectedDate.split("-").reverse().join(".")}</Text>
       <Text style={styles.missingNotice}>08:00 - 20:00</Text>
       <Text style={styles.redText}>MISSING: 1 NURSE</Text>
       <Button
@@ -185,7 +166,7 @@ export default function AdminScreen() {
         style={{ marginTop: 20 }}
         onPress={() => setShowShiftDetails(false)}
       />
-    </View>
+    </ScrollView>
   );
 
   return (
@@ -232,11 +213,7 @@ export default function AdminScreen() {
               <TouchableOpacity
                 key={idx}
                 onPress={() => setSelectedReplacement(nurse)}
-                style={{
-                  padding: 10,
-                  flexDirection: "row",
-                  alignItems: "center",
-                }}
+                style={{ padding: 10, flexDirection: "row", alignItems: "center" }}
               >
                 <View
                   style={{
@@ -245,10 +222,7 @@ export default function AdminScreen() {
                     marginRight: 10,
                     borderWidth: 1,
                     borderRadius: 4,
-                    backgroundColor:
-                      selectedReplacement === nurse
-                        ? Colors.green30
-                        : "transparent",
+                    backgroundColor: selectedReplacement === nurse ? Colors.green30 : "transparent",
                   }}
                 />
                 <Text>{nurse}</Text>
@@ -270,38 +244,23 @@ export default function AdminScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.white },
+  scrollContainer: { paddingHorizontal: 20 },
   title: { fontSize: 24, fontWeight: "700", marginBottom: 12, marginTop: 20 },
   segmented: { marginBottom: 16 },
-  card: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 10,
-  },
   doctorName: { fontWeight: "600", fontSize: 16 },
   specialty: { fontSize: 14, color: Colors.grey30 },
   detailsButton: { fontWeight: "700", color: Colors.black },
   dayCell: { alignItems: "center", padding: 6, flex: 1 },
-  selectedDay: {
-    backgroundColor: Colors.green20,
-    borderRadius: 12,
-  },
+  selectedDay: { backgroundColor: Colors.green20, borderRadius: 12 },
   dayText: { fontSize: 12, color: Colors.grey40, textAlign: "center" },
   selectedDayText: { color: "white", fontWeight: "bold", textAlign: "center" },
   weekCalendar: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 16,
-    paddingHorizontal: 2,
+    paddingHorizontal: 20,
   },
-  shiftHeader: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: Colors.red30,
-    marginVertical: 12,
-  },
+  shiftHeader: { fontSize: 18, fontWeight: "700", color: Colors.red30, marginVertical: 12 },
   missingNotice: { fontSize: 16, fontWeight: "500", marginBottom: 4 },
   redText: { color: Colors.red30, fontWeight: "600", marginBottom: 12 },
   sectionHeader: { fontWeight: "600", marginTop: 16, marginBottom: 6 },
@@ -318,16 +277,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     width: "80%",
   },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginBottom: 4,
-    textAlign: "center",
-  },
-  modalSubtitle: {
-    fontSize: 14,
-    color: Colors.grey40,
-    marginBottom: 12,
-    textAlign: "center",
-  },
+  modalTitle: { fontSize: 18, fontWeight: "600", marginBottom: 4, textAlign: "center" },
+  modalSubtitle: { fontSize: 14, color: Colors.grey40, marginBottom: 12, textAlign: "center" },
 });

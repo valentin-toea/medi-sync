@@ -37,6 +37,5 @@ export class CheckOutDto {
 
 export class GetTimeLogQueryDto {
   @IsDateString()
-  @IsNotEmpty()
   data: string; // YYYY-MM-DD
 }

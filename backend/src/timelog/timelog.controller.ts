@@ -9,6 +9,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Req,
 } from '@nestjs/common';
 import { TimeLogService } from './timelog.service';
 import {
@@ -31,6 +32,32 @@ export class TimeLogController {
   ): Promise<{ data: string; inregistrari: Partial<TimeLog> | null }> {
     const timeLog = await this.timeLogService.findByUserIdAndDate(
       userId,
+      query.data,
+    );
+    let inregistrari = {};
+    if (timeLog) {
+      inregistrari = {
+        check_in: timeLog.checkIn, // Ensure property names match response
+        check_out: timeLog.checkOut,
+        locatie_gps_checkin: timeLog.gpsLocationCheckIn,
+        locatie_gps_checkout: timeLog.gpsLocationCheckOut,
+        status: timeLog.status,
+      };
+    }
+    return {
+      data: query.data,
+      inregistrari,
+    };
+  }
+
+  @Get()
+  async getTimeLogForDayCurrentUser(
+    @Query() query: GetTimeLogQueryDto,
+    @Req() req: import('express').Request & { user?: { id: number } }, // Typed req
+  ): Promise<{ data: string; inregistrari: Partial<TimeLog> | null }> {
+    const userIdFromReq = req.user?.id as number;
+    const timeLog = await this.timeLogService.findByUserIdAndDate(
+      userIdFromReq,
       query.data,
     );
     let inregistrari = {};

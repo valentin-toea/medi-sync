@@ -1,21 +1,27 @@
-import { TopBar } from "@/components/TopBar";
 import { router } from "expo-router";
 import { Lock, Mail } from "lucide-react-native";
 import React, { useState } from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { Alert, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Button, Colors, Text, TextField } from "react-native-ui-lib";
+import { useAuthStore } from "./store/auth.store";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
+  const login = useAuthStore((state) => state.login);
+
+  const handleLogin = async () => {
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await login(email, password);
       router.replace("/(tabs)");
-    }, 1000);
+    } catch {
+      Alert.alert("Login failed", "Invalid credentials or server error.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
