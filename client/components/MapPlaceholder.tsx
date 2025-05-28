@@ -6,7 +6,7 @@ export default function MapPlaceholder() {
   return (
     <View style={styles.container}>
       <Image 
-        source={{ uri: 'https://imgur.com/a/XDYpMjb' }} 
+        source={{ uri: 'https://i.imgur.com/f68B7BL.png' }} 
         style={styles.mapImage} 
       />
       <View style={styles.markerContainer}>
