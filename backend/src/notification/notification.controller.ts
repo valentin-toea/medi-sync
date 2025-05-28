@@ -6,6 +6,7 @@ import {
   UseGuards,
   Req,
   ForbiddenException,
+  Post,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { NotificationService } from './notification.service';
@@ -39,6 +40,22 @@ export class NotificationController {
     }));
   }
 
+  @Get()
+  async getcurrentUserNotifications(
+    @Req() req: Request & { user: { userId: number; role: string } },
+  ): Promise<Partial<Notification>[]> {
+    const userId = req.user.userId;
+    const notifications = await this.notificationService.findByUserId(userId);
+    return notifications.map((n) => ({
+      id: n.id,
+      titlu: n.title,
+      mesaj: n.message,
+      data_trimitere: n.sentDate.toISOString(),
+      citit: n.isRead,
+    }));
+  }
+
+  @Post(':id/read')
   async markNotificationAsRead(
     @Param('id', ParseIntPipe) notificationId: number,
     @Req() req: Request & { user: { userId: number; role: string } },
