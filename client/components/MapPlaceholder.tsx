@@ -1,11 +1,12 @@
 import { View, Image, StyleSheet, Dimensions } from 'react-native';
 import { MapPin } from 'lucide-react-native';
+import React from 'react';
 
 export default function MapPlaceholder() {
   return (
     <View style={styles.container}>
       <Image 
-        source={{ uri: 'https://images.pexels.com/photos/1809340/pexels-photo-1809340.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2' }} 
+        source={{ uri: 'https://imgur.com/a/XDYpMjb' }} 
         style={styles.mapImage} 
       />
       <View style={styles.markerContainer}>
