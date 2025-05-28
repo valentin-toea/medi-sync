@@ -204,8 +204,8 @@ export default function AdminScreen() {
 
       <View style={{ flex: 1 }}>
         {tab === 0 && renderDoctorList()}
-        {tab === 2 && !showShiftDetails && renderShiftOverview()}
-        {tab === 2 && showShiftDetails && renderShiftDetails()}
+        {tab === 1 && !showShiftDetails && renderShiftOverview()}
+        {tab === 1 && showShiftDetails && renderShiftDetails()}
       </View>
 
       <BottomSheet
