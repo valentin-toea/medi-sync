@@ -5,7 +5,7 @@ import { StyleSheet, TouchableOpacity, View as RNView } from "react-native";
 import { Avatar, Button, Colors, Text, View } from "react-native-ui-lib";
 import { useState } from "react";
 import BottomSheet from "@/components/BottomSheet"; // adjust the import path as needed
-import { useAuthStore } from "@/app/store/auth.store";
+import { useAuthStore } from "@/store/auth.store";
 
 export function TopBar({
   hideUser,

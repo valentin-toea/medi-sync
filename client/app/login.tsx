@@ -3,7 +3,7 @@ import { Lock, Mail } from "lucide-react-native";
 import React, { useState } from "react";
 import { Alert, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Button, Colors, Text, TextField } from "react-native-ui-lib";
-import { useAuthStore } from "./store/auth.store";
+import { useAuthStore } from "../store/auth.store";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
