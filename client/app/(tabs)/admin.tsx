@@ -270,7 +270,7 @@ export default function AdminScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.white },
-  title: { fontSize: 24, fontWeight: "700", marginBottom: 12 },
+  title: { fontSize: 24, fontWeight: "700", marginBottom: 12, marginTop: 20 },
   segmented: { marginBottom: 16 },
   card: {
     flexDirection: "row",

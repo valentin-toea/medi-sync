@@ -4,6 +4,7 @@ import ScheduleItem from "@/components/ScheduleItem";
 import { TopBar } from "@/components/TopBar";
 import { useUserSchedule } from "@/hooks/useUserSchedule";
 import { getScheduleStatus } from "@/utils/getScheduleStatus";
+import { router } from "expo-router";
 import { Clock, Loader } from "lucide-react-native";
 import React, { useEffect, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
@@ -50,16 +51,12 @@ export default function HomeScreen() {
             <Clock size={50} />
           </View>
           <Button
-            label="Clock In"
+            label="Enter Time"
             backgroundColor={Colors.green20}
             borderRadius={12}
             style={{ width: "80%" }}
+            onPress={() => router.push("/time")}
           />
-          {/* <Button
-            label="Clock Out"
-            backgroundColor={Colors.red10}
-            borderRadius={12}
-          /> */}
         </CustomCard>
 
         {/* Schedule Section */}

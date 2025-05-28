@@ -111,6 +111,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     color: "#11181C",
     paddingHorizontal: 20,
+    marginTop: 20,
   },
   segmented: {
     marginHorizontal: 20,

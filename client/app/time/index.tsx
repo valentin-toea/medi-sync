@@ -1,16 +1,15 @@
-import { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import Header from '../components/Header';
-import UserInfo from '../components/UserInfo';
-import MapPlaceholder from '../components/MapPlaceholder';
-import DateSelector from '../components/DateSelector';
-import CheckButton from '../components/CheckButton';
-import TimeDisplay from '../components/TimeDisplay';
-import ValidateButton from '../components/ValidateButton';
-import React from 'react';
+import { useState, useEffect } from "react";
+import { View, StyleSheet, ScrollView } from "react-native";
+import MapPlaceholder from "../../components/MapPlaceholder";
+import DateSelector from "../../components/DateSelector";
+import CheckButton from "../../components/CheckButton";
+import TimeDisplay from "../../components/TimeDisplay";
+import ValidateButton from "../../components/ValidateButton";
 
 export default function PontajScreen() {
-  const [selectedDate, setSelectedDate] = useState<number>(new Date().getDate());
+  const [selectedDate, setSelectedDate] = useState<number>(
+    new Date().getDate()
+  );
   const [checkInTime, setCheckInTime] = useState<string | null>(null);
   const [checkOutTime, setCheckOutTime] = useState<string | null>(null);
   const [isCheckInDisabled, setIsCheckInDisabled] = useState(false);
@@ -32,7 +31,9 @@ export default function PontajScreen() {
 
   const handleCheckIn = () => {
     const now = new Date();
-    const formattedTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const formattedTime = `${String(now.getHours()).padStart(2, "0")}:${String(
+      now.getMinutes()
+    ).padStart(2, "0")}`;
     setCheckInTime(formattedTime);
     setIsCheckInDisabled(true);
     setIsCheckOutDisabled(false);
@@ -40,7 +41,9 @@ export default function PontajScreen() {
 
   const handleCheckOut = () => {
     const now = new Date();
-    const formattedTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const formattedTime = `${String(now.getHours()).padStart(2, "0")}:${String(
+      now.getMinutes()
+    ).padStart(2, "0")}`;
     setCheckOutTime(formattedTime);
     setIsCheckOutDisabled(true);
     setCanValidate(true);
@@ -48,7 +51,7 @@ export default function PontajScreen() {
 
   const handleValidate = () => {
     // Here you would typically send the data to a server
-    alert('Pontaj validat cu succes!');
+    alert("Pontaj validat cu succes!");
     setCheckInTime(null);
     setCheckOutTime(null);
     setIsCheckInDisabled(false);
@@ -58,39 +61,35 @@ export default function PontajScreen() {
 
   return (
     <ScrollView style={styles.container}>
-      <Header title="Pontaj zilnic" />
-      <UserInfo name="Dr. Mihai Popescu" />
       <MapPlaceholder />
-      
-      <DateSelector 
+
+      <DateSelector
         onDateSelect={handleDateSelect}
         initialSelectedDate={selectedDate}
       />
-      
+
       <View style={styles.actionContainer}>
-        <CheckButton 
-          label="Check-in" 
-          onPress={handleCheckIn} 
+        <CheckButton
+          label="Check-in"
+          onPress={handleCheckIn}
           disabled={isCheckInDisabled}
         />
-        
-        <CheckButton 
-          label="Check-out" 
-          onPress={handleCheckOut} 
+
+        <CheckButton
+          label="Check-out"
+          onPress={handleCheckOut}
           disabled={isCheckOutDisabled}
         />
       </View>
-      
+
       <View style={styles.timesContainer}>
         <TimeDisplay label="Ora check-in" time={checkInTime} />
         <TimeDisplay label="Ora check-out" time={checkOutTime} />
       </View>
-      
+
       <View style={styles.validateContainer}>
         <ValidateButton onPress={handleValidate} disabled={!canValidate} />
       </View>
-      
-      <View style={styles.divider} />
     </ScrollView>
   );
 }
@@ -98,7 +97,7 @@ export default function PontajScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: "white",
   },
   actionContainer: {
     paddingHorizontal: 16,
@@ -113,7 +112,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: '#EEEEEE',
+    backgroundColor: "#EEEEEE",
     marginTop: 16,
   },
 });
