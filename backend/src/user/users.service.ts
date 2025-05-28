@@ -45,8 +45,9 @@ export class UsersService {
     return bcrypt.hash(password, salt);
   }
 
-  findAll(): Promise<User[]> {
-    return this.repo.find();
+  async findAll(): Promise<User[]> {
+    const allUsers = await this.repo.find();
+    return allUsers;
   }
 
   async findOne(id: number): Promise<User> {

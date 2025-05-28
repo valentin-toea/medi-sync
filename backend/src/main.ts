@@ -8,6 +8,6 @@ async function bootstrap() {
   // const seeder = app.get(SeederService);
   // await seeder.run();
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
 }
 void bootstrap();

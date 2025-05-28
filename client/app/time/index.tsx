@@ -6,6 +6,9 @@ import CheckButton from "../../components/CheckButton";
 import TimeDisplay from "../../components/TimeDisplay";
 import ValidateButton from "../../components/ValidateButton";
 import React from "react";
+import api from "@/services/api";
+import { useAuthStore } from "@/store/auth.store";
+import useLocation from "@/hooks/useLocation";
 
 export default function PontajScreen() {
   const [selectedDate, setSelectedDate] = useState<number>(
@@ -14,40 +17,81 @@ export default function PontajScreen() {
   const [checkInTime, setCheckInTime] = useState<string | null>(null);
   const [checkOutTime, setCheckOutTime] = useState<string | null>(null);
   const [isCheckInDisabled, setIsCheckInDisabled] = useState(false);
-  const [isCheckOutDisabled, setIsCheckOutDisabled] = useState(true);
+  const [isCheckOutDisabled, setIsCheckOutDisabled] = useState(false);
   const [canValidate, setCanValidate] = useState(false);
+  const coords = useLocation();
+  const today = new Date();
+  const isToday = selectedDate === today.getDate();
+
+  const userDetails = useAuthStore((state) => state.userDetails);
 
   useEffect(() => {
-    // Reset times when date changes
-    setCheckInTime(null);
-    setCheckOutTime(null);
-    setIsCheckInDisabled(false);
-    setIsCheckOutDisabled(true);
-    setCanValidate(false);
-  }, [selectedDate]);
+    const fetchTimeLog = async () => {
+      if (!userDetails?.id) return;
+      const dateStr = new Date(today.getFullYear(), today.getMonth(), selectedDate);
+      try {
+        const res = await api.get(`/api/pontaj/${userDetails.id}`, {
+          params: { data: dateStr },
+        });
+        const inregistrari = res.data.inregistrari;
+
+        setCheckInTime(inregistrari?.check_in ? new Date(inregistrari.check_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null);
+        setCheckOutTime(inregistrari?.check_out ? new Date(inregistrari.check_out).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null);
+        setIsCheckInDisabled(!!inregistrari?.check_in);
+        setIsCheckOutDisabled(!inregistrari?.check_in || !!inregistrari?.check_out);
+        setCanValidate(!!inregistrari?.check_in && !!inregistrari?.check_out);
+      } catch (err) {
+        setCheckInTime(null);
+        setCheckOutTime(null);
+        setIsCheckInDisabled(false);
+        setIsCheckOutDisabled(true);
+        setCanValidate(false);
+      }
+    };
+    fetchTimeLog();
+  }, [userDetails?.id, selectedDate]);
 
   const handleDateSelect = (date: number) => {
     setSelectedDate(date);
   };
 
-  const handleCheckIn = () => {
+  const handleCheckIn = async () => {
     const now = new Date();
-    const formattedTime = `${String(now.getHours()).padStart(2, "0")}:${String(
-      now.getMinutes()
-    ).padStart(2, "0")}`;
-    setCheckInTime(formattedTime);
-    setIsCheckInDisabled(true);
-    setIsCheckOutDisabled(false);
+    const isoString = now.toISOString();
+    try {
+      await api.post("api/pontaj/checkin", {
+        userId: userDetails?.id,
+        checkInTime: isoString,
+        gpsLocationCheckIn: coords
+          ? `${coords.latitude},${coords.longitude}`
+          : "unknown",
+        date: isoString.split("T")[0],
+      });
+      setCheckInTime(`${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`);
+      setIsCheckInDisabled(true);
+      setIsCheckOutDisabled(false);
+    } catch (err) {
+      alert("Check-in failed");
+    }
   };
-
-  const handleCheckOut = () => {
+  
+  const handleCheckOut = async () => {
     const now = new Date();
-    const formattedTime = `${String(now.getHours()).padStart(2, "0")}:${String(
-      now.getMinutes()
-    ).padStart(2, "0")}`;
-    setCheckOutTime(formattedTime);
-    setIsCheckOutDisabled(true);
-    setCanValidate(true);
+    const isoString = now.toISOString();
+    try {
+      await api.post("api/pontaj/checkout", {
+        userId: userDetails?.id,
+        checkOutTime: isoString,
+        gpsLocationCheckOut: coords
+          ? `${coords.latitude},${coords.longitude}`
+          : "unknown",
+      });
+      setCheckOutTime(`${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`);
+      setIsCheckOutDisabled(true);
+      setCanValidate(true);
+    } catch (err) {
+      alert("Check-out failed");
+    }
   };
 
   const handleValidate = () => {
@@ -70,17 +114,16 @@ export default function PontajScreen() {
       />
 
       <View style={styles.actionContainer}>
-        <CheckButton
-          label="Check-in"
-          onPress={handleCheckIn}
-          disabled={isCheckInDisabled}
-        />
-
-        <CheckButton
-          label="Check-out"
-          onPress={handleCheckOut}
-          disabled={isCheckOutDisabled}
-        />
+      <CheckButton
+        label="Check-in"
+        onPress={handleCheckIn}
+        disabled={isCheckInDisabled || !isToday}
+      />
+      <CheckButton
+        label="Check-out"
+        onPress={handleCheckOut}
+        disabled={isCheckOutDisabled || !isToday}
+      />
       </View>
 
       <View style={styles.timesContainer}>

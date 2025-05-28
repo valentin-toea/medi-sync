@@ -22,6 +22,7 @@ export class TimeLogService {
     const user = await this.userRepository.findOneBy({
       id: createTimeLogDto.userId,
     });
+
     if (!user) {
       throw new NotFoundException(`User #${createTimeLogDto.userId} not found`);
     }
