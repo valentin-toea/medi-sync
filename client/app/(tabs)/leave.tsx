@@ -1,11 +1,13 @@
+import BottomSheet from "@/components/BottomSheet";
+import { CustomCard } from "@/components/CustomCard";
 import { Plus, Upload, X } from "lucide-react-native";
 import React, { useState } from "react";
 import {
-    Modal,
-    ScrollView,
-    StyleSheet,
-    TouchableOpacity,
-    View,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { Calendar } from "react-native-calendars";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
@@ -76,20 +78,23 @@ export default function LeaveScreen() {
       </View>
 
       {/* Calendar */}
-      <View style={styles.calendarWrapper}>
+      <CustomCard>
         <Calendar
           current={new Date().toISOString().split("T")[0]}
-          style={styles.calendar}
           markedDates={markedDates}
           theme={{
-            backgroundColor: "white",
-            calendarBackground: "white",
-            textSectionTitleColor: "#000",
+            backgroundColor: "transparent",
+            calendarBackground: "transparent",
+            textSectionTitleColor: "#4A5568",
+            dayTextColor: "#1A202C",
+            todayTextColor: Colors.primary,
+            selectedDayBackgroundColor: Colors.primary,
             selectedDayTextColor: "#fff",
-            selectedDayBackgroundColor: Colors.green20,
+            arrowColor: Colors.primary,
+            monthTextColor: "#1A202C",
           }}
         />
-      </View>
+      </CustomCard>
 
       {/* Requests */}
       <ScrollView style={styles.statusContainer}>
@@ -113,91 +118,84 @@ export default function LeaveScreen() {
       </ScrollView>
 
       {/* Modal */}
-      <Modal
+      <BottomSheet
         visible={modalVisible}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setModalVisible(false)}
+        onClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <TouchableOpacity
-              onPress={() => setModalVisible(false)}
-              style={styles.modalClose}
-            >
-              <X size={24} />
-            </TouchableOpacity>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Leave Request</Text>
+          <Text style={styles.modalSubtitle}>Select period</Text>
 
-            <Text style={styles.modalTitle}>Leave Request</Text>
-            <Text style={styles.modalSubtitle}>Select period</Text>
+          {/* Start Date Picker Trigger */}
+          <Button
+            label={
+              startDate
+                ? `Start Date: ${formatDate(startDate)}`
+                : "Select Start Date"
+            }
+            backgroundColor={Colors.grey80}
+            color={Colors.text}
+            borderRadius={12}
+            style={styles.dateButton}
+            onPress={() => {
+              setPickingStart(true);
+              setDatePickerVisible(true);
+            }}
+          />
 
-            {/* Start Date Picker Trigger */}
-            <Button
-              label={
-                startDate
-                  ? `Start Date: ${formatDate(startDate)}`
-                  : "Select Start Date"
+          {/* End Date Picker Trigger */}
+          <Button
+            label={
+              endDate ? `End Date: ${formatDate(endDate)}` : "Select End Date"
+            }
+            backgroundColor={Colors.grey80}
+            borderRadius={12}
+            style={styles.dateButton}
+            color={Colors.text}
+            onPress={() => {
+              setPickingStart(false);
+              setDatePickerVisible(true);
+            }}
+          />
+
+          {/* Date Picker Modal */}
+          <DateTimePickerModal
+            isVisible={isDatePickerVisible}
+            mode="date"
+            onConfirm={(date) => {
+              setDatePickerVisible(false);
+              if (pickingStart) {
+                setStartDate(date);
+                return;
               }
-              backgroundColor={Colors.grey80}
-              color={Colors.text}
-              borderRadius={12}
-              style={styles.dateButton}
-              onPress={() => {
-                setPickingStart(true);
-                setDatePickerVisible(true);
-              }}
-            />
+              setEndDate(date);
+            }}
+            onCancel={() => setDatePickerVisible(false)}
+          />
 
-            {/* End Date Picker Trigger */}
-            <Button
-              label={
-                endDate ? `End Date: ${formatDate(endDate)}` : "Select End Date"
-              }
-              backgroundColor={Colors.grey80}
-              borderRadius={12}
-              style={styles.dateButton}
-              color={Colors.text}
-              onPress={() => {
-                setPickingStart(false);
-                setDatePickerVisible(true);
-              }}
-            />
+          <Button
+            label="Add"
+            backgroundColor={Colors.black}
+            borderRadius={12}
+            iconSource={() => <Plus size={18} color="white" />}
+            style={{ marginTop: 16 }}
+            onPress={handleAddRequest}
+          />
 
-            {/* Date Picker Modal */}
-            <DateTimePickerModal
-              isVisible={isDatePickerVisible}
-              mode="date"
-              onConfirm={(date) => {
-                setDatePickerVisible(false);
-                pickingStart ? setStartDate(date) : setEndDate(date);
-              }}
-              onCancel={() => setDatePickerVisible(false)}
-            />
+          <Upload
+            style={{ marginVertical: 20, alignSelf: "center" }}
+            size={28}
+            color={Colors.grey30}
+          />
 
-            <Button
-              label="Add"
-              backgroundColor={Colors.black}
-              borderRadius={12}
-              iconSource={() => <Plus size={18} color="white" />}
-              style={{ marginTop: 16 }}
-              onPress={handleAddRequest}
-            />
-
-            <Upload
-              style={{ marginVertical: 20 }}
-              size={28}
-              color={Colors.grey30}
-            />
-
-            <Button
-              label="Save"
-              backgroundColor={Colors.green20}
-              borderRadius={12}
-              onPress={handleAddRequest}
-            />
-          </View>
+          <Button
+            label="Save"
+            backgroundColor={Colors.green20}
+            borderRadius={12}
+            onPress={handleAddRequest}
+          />
         </View>
-      </Modal>
+      </BottomSheet>
     </View>
   );
 }
@@ -222,10 +220,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.grey80,
     borderRadius: 12,
     padding: 12,
-  },
-  calendar: {
-    borderRadius: 10,
-    paddingBottom: 12,
   },
   statusContainer: {
     marginTop: 24,
@@ -253,18 +247,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.grey50,
     marginTop: 8,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "#00000080",
-    justifyContent: "center",
-    alignItems: "center",
-  },
   modalContent: {
-    width: "85%",
     backgroundColor: Colors.white,
     borderRadius: 16,
-    padding: 20,
-    alignItems: "center",
+    paddingHorizontal: 20,
   },
   modalClose: {
     alignSelf: "flex-end",
