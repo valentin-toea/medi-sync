@@ -233,7 +233,7 @@ export class SeederService {
           ),
           type: LeaveRequestType.MEDICAL_LEAVE,
           status: LeaveRequestStatus.PENDING,
-          attachment: 'path/to/medical_certificate.pdf', // Example path
+          attachment: './uploads/attachments/medical_certificate.pdf', // Example path
         },
       ]);
       console.log(`LeaveRequests seeded for ${medicUser.email}`);
