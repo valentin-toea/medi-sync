@@ -1,51 +1,46 @@
-import { View, Image, StyleSheet, Dimensions } from 'react-native';
-import { MapPin } from 'lucide-react-native';
+// components/MapPlaceholder.tsx
 import React from 'react';
-
-export default function MapPlaceholder() {
-  return (
-    <View style={styles.container}>
-      <Image 
-        source={{ uri: 'https://i.imgur.com/f68B7BL.png' }} 
-        style={styles.mapImage} 
-      />
-      <View style={styles.markerContainer}>
-        <MapPin size={32} color="#4285F4" fill="#4285F4" strokeWidth={1.5} />
-        <View style={styles.markerDot} />
-      </View>
-    </View>
-  );
-}
+import { StyleSheet, View, Dimensions, ActivityIndicator } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
+import useLocation from '@/hooks/useLocation';
 
 const { width } = Dimensions.get('window');
 
+export default function MapPlaceholder() {
+  const coords = useLocation();
+
+  if (!coords) {
+    return (
+      <View style={styles.loader}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
+  return (
+    <MapView
+      style={styles.map}
+      initialRegion={{
+        ...coords,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      }}
+    >
+      <Marker coordinate={coords} />
+    </MapView>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: {
+  map: {
     width: '100%',
     height: 150,
     borderRadius: 8,
-    overflow: 'hidden',
-    position: 'relative',
   },
-  mapImage: {
+  loader: {
     width: '100%',
-    height: '100%',
-    opacity: 0.7,
-  },
-  markerContainer: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    marginLeft: -16,
-    marginTop: -32,
+    height: 150,
+    justifyContent: 'center',
     alignItems: 'center',
-  },
-  markerDot: {
-    width: 8,
-    height: 8,
-    backgroundColor: 'white',
-    borderRadius: 4,
-    position: 'absolute',
-    top: 14,
   },
 });
