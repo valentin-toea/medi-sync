@@ -67,10 +67,12 @@ export function TopBar({
             <View style={styles.logoutRow}>
               <LogOut
                 size={16}
-                color={Colors.text}
+                color={Colors.red20}
                 style={{ marginRight: 8 }}
               />
-              <Text style={styles.dropdownText}>Logout</Text>
+              <Text style={styles.dropdownText} color={Colors.red20}>
+                Logout
+              </Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -131,7 +133,7 @@ const styles = StyleSheet.create({
   },
   dropdownText: {
     fontSize: 16,
-    color: Colors.text,
+    fontWeight: "500",
   },
   logoutRow: {
     flexDirection: "row",
