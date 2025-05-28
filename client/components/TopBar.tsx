@@ -61,7 +61,7 @@ export function TopBar({
             style={styles.dropdownItem}
             onPress={() => {
               closeDropdown();
-              router.navigate("/login");
+              router.replace("/login");
             }}
           >
             <View style={styles.logoutRow}>

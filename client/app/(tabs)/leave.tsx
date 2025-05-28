@@ -1,14 +1,8 @@
 import BottomSheet from "@/components/BottomSheet";
 import { CustomCard } from "@/components/CustomCard";
-import { Plus, Upload, X } from "lucide-react-native";
+import { Plus, Upload } from "lucide-react-native";
 import React, { useState } from "react";
-import {
-  Modal,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { Calendar } from "react-native-calendars";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { Button, Colors, Text } from "react-native-ui-lib";
