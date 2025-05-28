@@ -27,6 +27,8 @@ export class AuthService {
       where: { email },
       relations: ['user'],
     });
+    console.log('Auth Entry:', authEntry); // Debugging line to check authEntry
+    console.log('Password:', pass); // Debugging line to check password
     if (authEntry && (await bcrypt.compare(pass, authEntry.passwordHash))) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { passwordHash, ...user } = authEntry; // Exclude password hash from authEntry object
@@ -36,7 +38,7 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    const user = await this.validateUser(loginDto.email, loginDto.parola);
+    const user = await this.validateUser(loginDto.email, loginDto.password);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }

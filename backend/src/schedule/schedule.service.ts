@@ -1,10 +1,10 @@
 // src/schedule/schedule.service.ts
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Between, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
 import { ScheduleItem } from './schedule-item.entity';
-
-import { Between, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
+// User entity import might be needed if not already present for type safety, though not strictly for the query change itself.
+// import { User } from '../user/user.entity';
 
 @Injectable()
 export class ScheduleService {
@@ -13,14 +13,15 @@ export class ScheduleService {
     private scheduleRepo: Repository<ScheduleItem>,
   ) {}
 
-  async findByUser(userId: number): Promise<ScheduleItem[]> {
+  async findByUser(userIdInput: number): Promise<ScheduleItem[]> {
     return this.scheduleRepo.find({
-      where: { userId },
+      where: { user: { id: userIdInput } }, // Query by the user's ID through the 'user' relation
+      // This will translate to a condition on the 'user_id' foreign key column
       order: { startDate: 'ASC' },
     });
   }
 
-  async findTodayByUser(userId: number): Promise<ScheduleItem[]> {
+  async findTodayByUser(userIdInput: number): Promise<ScheduleItem[]> {
     const now = new Date();
     const startOfDay = new Date(
       now.getFullYear(),
@@ -43,15 +44,15 @@ export class ScheduleService {
     return this.scheduleRepo.find({
       where: [
         {
-          userId,
+          user: { id: userIdInput }, // Updated to query via relation
           startDate: Between(startOfDay, endOfDay),
         },
         {
-          userId,
+          user: { id: userIdInput }, // Updated to query via relation
           endDate: Between(startOfDay, endOfDay),
         },
         {
-          userId,
+          user: { id: userIdInput }, // Updated to query via relation
           startDate: LessThanOrEqual(startOfDay),
           endDate: MoreThanOrEqual(endOfDay),
         },

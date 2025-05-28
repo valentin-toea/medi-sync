@@ -18,7 +18,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../user/user.entity';
-import { Internship } from './internship.entity';
+// import { Internship } from './internship.entity';
 
 @Controller('api/rezidentiat')
 @UseGuards(JwtAuthGuard)
@@ -47,28 +47,28 @@ export class InternshipController {
     return this.internshipService.getInternshipsForUser(userId);
   }
 
-  @Get('stagiu/:stagiu_id')
-  async getInternshipDetails(
-    @Param('stagiu_id', ParseIntPipe) internshipId: number,
-  ): Promise<Partial<Internship>> {
-    const internship = await this.internshipService.findOne(internshipId);
-    return {
-      // Map to exact response fields from spec
-      id: internship.id,
-      denumire: internship.name,
-      descriere: internship.description,
-      perioada: `${internship.startDate.toISOString().split('T')[0]} pana la ${internship.endDate.toISOString().split('T')[0]}`,
-      medic_coordonator: internship.coordinator
-        ? `Dr. ${internship.coordinator.firstName} ${internship.coordinator.lastName}`
-        : internship.coordinatorName || 'N/A',
-      loc_desfasurare: internship.location,
-      nr_ore: internship.numberOfHours,
-      minim_proceduri: internship.minimumProcedures,
-      data_test: internship.testDate
-        ? internship.testDate.toISOString().split('T')[0]
-        : 'N/A',
-    };
-  }
+  // @Get('stagiu/:stagiu_id')
+  // async getInternshipDetails(
+  //   @Param('stagiu_id', ParseIntPipe) internshipId: number,
+  // ): Promise<Partial<Internship>> {
+  //   const internship = await this.internshipService.findOne(internshipId);
+  //   return {
+  //     // Map to exact response fields from spec
+  //     id: internship.id,
+  //     denumire: internship.name,
+  //     descriere: internship.description,
+  //     perioada: `${internship.startDate.toISOString().split('T')[0]} pana la ${internship.endDate.toISOString().split('T')[0]}`,
+  //     medic_coordonator: internship.coordinator
+  //       ? `Dr. ${internship.coordinator.firstName} ${internship.coordinator.lastName}`
+  //       : internship.coordinatorName || 'N/A',
+  //     loc_desfasurare: internship.location,
+  //     nr_ore: internship.numberOfHours,
+  //     minim_proceduri: internship.minimumProcedures,
+  //     data_test: internship.testDate
+  //       ? internship.testDate.toISOString().split('T')[0]
+  //       : 'N/A',
+  //   };
+  // }
 
   @Post('aplica/:stagiu_id')
   @HttpCode(HttpStatus.CREATED)

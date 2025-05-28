@@ -1,7 +1,4 @@
 // src/schedule/schedule-item.entity.ts
-// No changes needed based on the new requirements, it maps well:
-// name -> activitate
-// startDate, endDate -> data, interval
 import {
   Entity,
   Column,
@@ -26,9 +23,10 @@ export class ScheduleItem {
   endDate: Date;
 
   @ManyToOne(() => User, (user: User) => user.schedule, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'user_id' }) // Ensure correct column name
+  @JoinColumn({ name: 'user_id' }) // This defines the foreign key column as 'user_id'
   user: User;
 
-  @Column()
-  userId: number;
+  // Remove this line:
+  // @Column()
+  // userId: number;
 }

@@ -33,7 +33,7 @@ export class TimeLogController {
       userId,
       query.data,
     );
-    let inregistrari = null;
+    let inregistrari = {};
     if (timeLog) {
       inregistrari = {
         check_in: timeLog.checkIn, // Ensure property names match response

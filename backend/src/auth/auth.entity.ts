@@ -14,7 +14,7 @@ export class Auth {
   id: number;
 
   @ManyToOne(() => User, (user) => user.authEntries, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn({ name: 'userId' })
   user: User;
 
   @Column()

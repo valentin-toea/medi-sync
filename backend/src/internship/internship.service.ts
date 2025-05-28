@@ -112,7 +112,16 @@ export class InternshipService {
         detalii: `Starts on ${app.internship.startDate.toISOString().split('T')[0]}`, // Simplified details
       }));
 
-    let currentInternshipFormatted = null;
+    let currentInternshipFormatted: {
+      id: number;
+      denumire: string;
+      perioada: string;
+      medic_coordonator: string;
+      loc_desfasurare: string;
+      nr_ore: number;
+      minim_proceduri: number;
+      data_test: string;
+    } | null = null;
     if (currentInternship) {
       currentInternshipFormatted = {
         id: currentInternship.id,

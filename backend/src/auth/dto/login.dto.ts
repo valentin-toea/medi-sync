@@ -9,5 +9,5 @@ export class LoginDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(6) // Example validation
-  parola: string; // 'parola' as per request
+  password: string; // 'parola' as per request
 }
