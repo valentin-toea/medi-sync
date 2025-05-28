@@ -1,6 +1,14 @@
+import BottomSheet from "@/components/BottomSheet";
+import { CustomCard } from "@/components/CustomCard";
 import { X } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
-import { Modal, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+  Modal,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Button, Colors, SegmentedControl, Text } from "react-native-ui-lib";
 
 const doctors = [
@@ -19,28 +27,39 @@ export default function AdminScreen() {
   const [tab, setTab] = useState(0);
   const [showShiftDetails, setShowShiftDetails] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [selectedReplacement, setSelectedReplacement] = useState<string | null>(null);
+  const [selectedReplacement, setSelectedReplacement] = useState<string | null>(
+    null
+  );
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
     return today.toISOString().split("T")[0];
   });
+
+  const [showDoctorDetails, setShowDoctorDetails] = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState(-1);
 
   useEffect(() => {
     setShowShiftDetails(false);
   }, [tab]);
 
   const renderDoctorList = () => (
-    <ScrollView>
+    <ScrollView style={{ paddingHorizontal: 20 }}>
       {doctors.map((doc, idx) => (
-        <View key={idx} style={styles.card}>
-          <View>
-            <Text style={styles.doctorName}>{doc.name}</Text>
-            <Text style={styles.specialty}>{doc.specialty}</Text>
-          </View>
-          <TouchableOpacity>
-            <Text style={styles.detailsButton}>DETAILS</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          key={idx}
+          style={{ marginBottom: 12 }}
+          onPress={() => {
+            setSelectedDoctor(idx);
+            setShowDoctorDetails(true);
+          }}
+        >
+          <CustomCard>
+            <View>
+              <Text style={styles.doctorName}>{doc.name}</Text>
+              <Text style={styles.specialty}>{doc.specialty}</Text>
+            </View>
+          </CustomCard>
+        </TouchableOpacity>
       ))}
     </ScrollView>
   );
@@ -57,7 +76,14 @@ export default function AdminScreen() {
     });
 
     // This could be replaced with an API call filtered by selectedDate
-    const departmentsForDate = ["Pediatrics", "Dermatology", "Orthopedics", "General Surgery", "Gynecology", "Oncology"];
+    const departmentsForDate = [
+      "Pediatrics",
+      "Dermatology",
+      "Orthopedics",
+      "General Surgery",
+      "Gynecology",
+      "Oncology",
+    ];
 
     return (
       <>
@@ -71,10 +97,16 @@ export default function AdminScreen() {
                 onPress={() => setSelectedDate(dateStr)}
                 style={[styles.dayCell, isSelected && styles.selectedDay]}
               >
-                <Text style={isSelected ? styles.selectedDayText : styles.dayText}>
-                  {date.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase()}
+                <Text
+                  style={isSelected ? styles.selectedDayText : styles.dayText}
+                >
+                  {date
+                    .toLocaleDateString("en-US", { weekday: "short" })
+                    .toUpperCase()}
                 </Text>
-                <Text style={isSelected ? styles.selectedDayText : styles.dayText}>
+                <Text
+                  style={isSelected ? styles.selectedDayText : styles.dayText}
+                >
                   {date.getDate()}
                 </Text>
               </TouchableOpacity>
@@ -86,13 +118,25 @@ export default function AdminScreen() {
           {departmentsForDate.map((dept, idx) => (
             <TouchableOpacity
               key={idx}
-              onPress={() => dept === "Pediatrics" ? setShowShiftDetails(true) : {}}
+              onPress={() =>
+                dept === "Pediatrics" ? setShowShiftDetails(true) : {}
+              }
               style={styles.card}
             >
               <View>
-                <Text style={[styles.doctorName, dept === "Pediatrics" && { color: Colors.red30 }]}> {dept.toUpperCase()} </Text>
+                <Text
+                  style={[
+                    styles.doctorName,
+                    dept === "Pediatrics" && { color: Colors.red30 },
+                  ]}
+                >
+                  {" "}
+                  {dept.toUpperCase()}{" "}
+                </Text>
                 {dept === "Pediatrics" && (
-                  <Text style={{ color: Colors.red30 }}>INSUFFICIENT STAFF</Text>
+                  <Text style={{ color: Colors.red30 }}>
+                    INSUFFICIENT STAFF
+                  </Text>
                 )}
               </View>
               <Text style={styles.detailsButton}>DETAILS</Text>
@@ -105,7 +149,9 @@ export default function AdminScreen() {
 
   const renderShiftDetails = () => (
     <View>
-      <Text style={styles.shiftHeader}>PEDIATRICS {selectedDate.split("-").reverse().join(".")}</Text>
+      <Text style={styles.shiftHeader}>
+        PEDIATRICS {selectedDate.split("-").reverse().join(".")}
+      </Text>
       <Text style={styles.missingNotice}>08:00 - 20:00</Text>
       <Text style={styles.redText}>MISSING: 1 NURSE</Text>
       <Button
@@ -144,26 +190,38 @@ export default function AdminScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Administrative</Text>
+      <View style={{ paddingHorizontal: 20 }}>
+        <Text style={styles.title}>Administrative</Text>
 
-      <SegmentedControl
-        segments={[{ label: "Doctors" }, { label: "Shifts" }]}
-        initialIndex={tab}
-        onChangeIndex={(index) => setTab(index)}
-        containerStyle={styles.segmented}
-        activeColor={Colors.green20}
-      />
+        <SegmentedControl
+          segments={[{ label: "Doctors" }, { label: "Shifts" }]}
+          initialIndex={tab}
+          onChangeIndex={(index) => setTab(index)}
+          containerStyle={styles.segmented}
+          activeColor={Colors.green20}
+        />
+      </View>
 
       <View style={{ flex: 1 }}>
         {tab === 0 && renderDoctorList()}
-        {tab === 2 && !showShiftDetails && renderShiftOverview()}
-        {tab === 2 && showShiftDetails && renderShiftDetails()}
+        {tab === 1 && !showShiftDetails && renderShiftOverview()}
+        {tab === 1 && showShiftDetails && renderShiftDetails()}
       </View>
+
+      <BottomSheet
+        visible={showDoctorDetails}
+        onClose={() => setShowDoctorDetails(false)}
+      >
+        <Text>{doctors[selectedDoctor]?.name}</Text>
+      </BottomSheet>
 
       <Modal transparent visible={showModal} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <TouchableOpacity style={{ alignSelf: "flex-end" }} onPress={() => setShowModal(false)}>
+            <TouchableOpacity
+              style={{ alignSelf: "flex-end" }}
+              onPress={() => setShowModal(false)}
+            >
               <X size={24} />
             </TouchableOpacity>
 
@@ -174,7 +232,11 @@ export default function AdminScreen() {
               <TouchableOpacity
                 key={idx}
                 onPress={() => setSelectedReplacement(nurse)}
-                style={{ padding: 10, flexDirection: "row", alignItems: "center" }}
+                style={{
+                  padding: 10,
+                  flexDirection: "row",
+                  alignItems: "center",
+                }}
               >
                 <View
                   style={{
@@ -183,7 +245,10 @@ export default function AdminScreen() {
                     marginRight: 10,
                     borderWidth: 1,
                     borderRadius: 4,
-                    backgroundColor: selectedReplacement === nurse ? Colors.green30 : "transparent",
+                    backgroundColor:
+                      selectedReplacement === nurse
+                        ? Colors.green30
+                        : "transparent",
                   }}
                 />
                 <Text>{nurse}</Text>
@@ -204,8 +269,8 @@ export default function AdminScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: Colors.white },
-  title: { fontSize: 24, fontWeight: "700", marginBottom: 12 },
+  container: { flex: 1, backgroundColor: Colors.white },
+  title: { fontSize: 24, fontWeight: "700", marginBottom: 12, marginTop: 20 },
   segmented: { marginBottom: 16 },
   card: {
     flexDirection: "row",

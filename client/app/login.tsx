@@ -20,7 +20,6 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <TopBar />
       <View style={styles.content}>
         <Text style={styles.title}>Welcome Back</Text>
         <Text style={styles.subtitle}>Please log in to continue</Text>
