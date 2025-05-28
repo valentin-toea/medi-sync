@@ -132,6 +132,7 @@ export class LeaveRequestController {
         'You can only create leave requests for yourself unless you are an admin.',
       );
     }
+
     if (file) {
       createLeaveRequestDto.attachment = file.path;
     }

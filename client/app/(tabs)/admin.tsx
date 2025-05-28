@@ -3,6 +3,7 @@ import { CustomCard } from "@/components/CustomCard";
 import { X } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
+  Alert,
   Modal,
   ScrollView,
   StyleSheet,
@@ -10,16 +11,9 @@ import {
   View,
 } from "react-native";
 import { Button, Colors, SegmentedControl, Text } from "react-native-ui-lib";
-
-const doctors = [
-  { name: "Dr. Mihai Popescu", specialty: "Pediatrics" },
-  { name: "Dr. Maria Ionescu", specialty: "Dermatology" },
-  { name: "Dr. Elena Georgescu", specialty: "Pediatrics" },
-  { name: "Dr. Alexandru Dumitru", specialty: "Orthopedics" },
-  { name: "Dr. Andreea Stoica", specialty: "Gynecology" },
-  { name: "Dr. Mihai Radu", specialty: "Neurology" },
-  { name: "Dr. Ioana Marinescu", specialty: "Endocrinology" },
-];
+import * as FileSystem from "expo-file-system";
+import * as Sharing from "expo-sharing";
+import api from "@/services/api";
 
 const availableReplacements = ["Panaete Crina", "Dimitrie Sidonia"];
 
@@ -28,39 +22,109 @@ export default function AdminScreen() {
   const [showShiftDetails, setShowShiftDetails] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [selectedReplacement, setSelectedReplacement] = useState<string | null>(null);
+  const [doctorLeaveRequests, setDoctorLeaveRequests] = useState<any[]>([]);
+  const [isLoadingRequests, setIsLoadingRequests] = useState(false);
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
-    return today.toISOString().split("T")[0];
+      return today.toISOString().split("T")[0];
   });
 
+  // Doctor state
+  const [doctors, setDoctors] = useState<any[]>([]);
   const [showDoctorDetails, setShowDoctorDetails] = useState(false);
-  const [selectedDoctor, setSelectedDoctor] = useState(-1);
+  const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
+ 
+   // Fetch all doctors on mount
+   useEffect(() => {
+     const fetchDoctors = async () => {
+       try {
+         const res = await api.get("/api/utilizatori");
+         console.log("Fetched doctors:", res.data);
+         setDoctors(res.data);
+       } catch (err) {
+        // handle error
+       }
+     };
+     fetchDoctors();
+   }, []);
+ 
+    // Fetch leave requests when a doctor is selected
+    const handleDoctorPress = async (doctor: any) => {
+      setSelectedDoctor(doctor);
+      setShowDoctorDetails(true);
+      setIsLoadingRequests(true);
+      try {
+        const res = await api.get(`/api/concedii/${doctor.id}`);
+        setDoctorLeaveRequests(res.data);
+      } catch (err) {
+        setDoctorLeaveRequests([]);
+        Alert.alert("Error", "Could not fetch leave requests.");
+      }
+      setIsLoadingRequests(false);
+    };
 
-  useEffect(() => {
-    setShowShiftDetails(false);
-  }, [tab]);
+    // Download attachment
+    const handleDownloadAttachment = async (leaveRequestId: number) => {
+      try {
+        const url = `${api.defaults.baseURL}/api/concedii/download/${leaveRequestId}`;
+        const fileUri = FileSystem.cacheDirectory + `attachment-${leaveRequestId}`;
+        const downloadResumable = FileSystem.createDownloadResumable(
+          url,
+          fileUri,
+          {
+            headers: {
+              Authorization: String(api.defaults.headers.common["Authorization"] ?? ""),
+            },
+          }
+        );
+        const downloadResult = await downloadResumable.downloadAsync();
+        if (downloadResult && downloadResult.uri) {
+          if (await Sharing.isAvailableAsync()) {
+            await Sharing.shareAsync(downloadResult.uri);
+          } else {
+            Alert.alert("Downloaded", "File downloaded to: " + downloadResult.uri);
+          }
+        } else {
+          Alert.alert("Error", "Download failed.");
+        }
+      } catch (err) {
+        Alert.alert("Error", "Could not download or open the attachment.");
+      }
+    };
 
-  const renderDoctorList = () => (
-    <ScrollView style={styles.scrollContainer}>
-      {doctors.map((doc, idx) => (
-        <TouchableOpacity
-          key={idx}
-          style={{ marginBottom: 12 }}
-          onPress={() => {
-            setSelectedDoctor(idx);
-            setShowDoctorDetails(true);
-          }}
-        >
-          <CustomCard>
-            <View>
-              <Text style={styles.doctorName}>{doc.name}</Text>
-              <Text style={styles.specialty}>{doc.specialty}</Text>
-            </View>
-          </CustomCard>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
-  );
+    // Change status
+    const handleChangeStatus = async (leaveRequestId: number, newStatus: string) => {
+      try {
+        await api.put(`/api/concedii/admin/${leaveRequestId}`, { status: newStatus });
+        setDoctorLeaveRequests((prev) =>
+          prev.map((req) =>
+            req.id === leaveRequestId ? { ...req, status: newStatus } : req
+          )
+        );
+        Alert.alert("Success", "Status updated.");
+      } catch (err) {
+        Alert.alert("Error", "Could not update status.");
+      }
+    };
+
+    const renderDoctorList = () => (
+      <ScrollView style={styles.scrollContainer}>
+        {doctors.map((doc) => (
+          <TouchableOpacity
+            key={doc.id}
+            style={{ marginBottom: 12 }}
+            onPress={() => handleDoctorPress(doc)}
+          >
+            <CustomCard>
+              <View>
+                <Text style={styles.doctorName}>{doc.firstName ?? doc.prenume} {doc.lastName ?? doc.nume}</Text>
+                <Text style={styles.specialty}>{doc.specialty ?? doc.specialitate}</Text>
+              </View>
+            </CustomCard>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    );
 
   const renderShiftOverview = () => {
     const today = new Date();
@@ -193,7 +257,61 @@ export default function AdminScreen() {
         visible={showDoctorDetails}
         onClose={() => setShowDoctorDetails(false)}
       >
-        <Text>{doctors[selectedDoctor]?.name}</Text>
+        {selectedDoctor ? (
+          <View style={{ padding: 16 }}>
+            <Text style={styles.doctorName}>
+              {selectedDoctor.firstName} {selectedDoctor.lastName}
+            </Text>
+            <Text>Email: {selectedDoctor.email}</Text>
+            <Text>Phone: {selectedDoctor.phone ?? "-"}</Text>
+            <Text>Specialty: {selectedDoctor.specialty}</Text>
+            <Text>Role: {selectedDoctor.role}</Text>
+            <Text>Parafa: {selectedDoctor.parafa ?? "-"}</Text>
+            <Text>CNP: {selectedDoctor.cnp}</Text>
+            <Text>Created at: {new Date(selectedDoctor.createdAt).toLocaleString()}</Text>
+            <Text>Updated at: {new Date(selectedDoctor.updatedAt).toLocaleString()}</Text>
+            <Text style={{ fontWeight: "bold", marginTop: 16 }}>Leave Requests:</Text>
+    {isLoadingRequests ? (
+      <Text>Loading...</Text>
+    ) : doctorLeaveRequests.length === 0 ? (
+      <Text>No leave requests.</Text>
+    ) : (
+      doctorLeaveRequests.map((req) => (
+        <View key={req.id} style={{ marginVertical: 8, padding: 8, backgroundColor: "#f5f5f5", borderRadius: 8 }}>
+          <Text>Period: {req.data_inceput} - {req.data_sfarsit}</Text>
+          <Text>Type: {req.tip}</Text>
+          <Text>Status: {req.status}</Text>
+          <View style={{ flexDirection: "row", marginTop: 4 }}>
+            <Button
+              label="Download"
+              size={Button.sizes.xSmall}
+              backgroundColor={Colors.grey40}
+              onPress={() => handleDownloadAttachment(req.id)}
+              style={{ marginRight: 8 }}
+            />
+            <Button
+              label="Approve"
+              size={Button.sizes.xSmall}
+              backgroundColor={Colors.green20}
+              onPress={() => handleChangeStatus(req.id, "aprobat")}
+              style={{ marginRight: 8 }}
+              disabled={req.status === "aprobat"}
+            />
+            <Button
+              label="Reject"
+              size={Button.sizes.xSmall}
+              backgroundColor={Colors.red30}
+              onPress={() => handleChangeStatus(req.id, "respins")}
+              disabled={req.status === "respins"}
+            />
+          </View>
+        </View>
+      ))
+    )}
+          </View>
+        ) : (
+          <Text>Loading...</Text>
+        )}
       </BottomSheet>
 
       <Modal transparent visible={showModal} animationType="fade">

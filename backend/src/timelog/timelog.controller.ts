@@ -70,6 +70,7 @@ export class TimeLogController {
         status: timeLog.status,
       };
     }
+
     return {
       data: query.data,
       inregistrari,

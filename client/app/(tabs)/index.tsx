@@ -3,6 +3,8 @@ import { CustomCard } from "@/components/CustomCard";
 import ScheduleItem from "@/components/ScheduleItem";
 import { TopBar } from "@/components/TopBar";
 import { useUserSchedule } from "@/hooks/useUserSchedule";
+import api from "@/services/api";
+import { useAuthStore } from "@/store/auth.store";
 import { getScheduleStatus } from "@/utils/getScheduleStatus";
 import { router } from "expo-router";
 import { Clock, Loader } from "lucide-react-native";
@@ -20,6 +22,10 @@ export default function HomeScreen() {
   } = useUserSchedule(userId);
   const [showFullSchedule, setShowFullSchedule] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const userDetails = useAuthStore((state) => state.userDetails);
+  const [timeLogStatus, setTimeLogStatus] = useState<"not_checked_in" | "checked_in" | "checked_out">("not_checked_in");
+  const [buttonLabel, setButtonLabel] = useState("Check In");
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
   const shortScheduleList = useMemo(
     () => scheduleList?.slice(0, 3),
@@ -34,6 +40,38 @@ export default function HomeScreen() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    const fetchTodayTimeLog = async () => {
+      try {
+        const todayStr = new Date().toISOString().split("T")[0];
+        const res = await api.get(`/api/pontaj/${userDetails?.id ?? 1}`, {
+          params: { data: todayStr },
+        });
+        const inregistrari = res.data.inregistrari;
+        if (!inregistrari || !inregistrari.check_in) {
+          setTimeLogStatus("not_checked_in");
+          setButtonLabel("Check In");
+          setIsButtonDisabled(false);
+        } else if (inregistrari.check_in && !inregistrari.check_out) {
+          setTimeLogStatus("checked_in");
+          setButtonLabel("Check Out");
+          setIsButtonDisabled(false);
+        } else if (inregistrari.check_in && inregistrari.check_out) {
+          setTimeLogStatus("checked_out");
+          setButtonLabel("View Times");
+          setIsButtonDisabled(false);
+        }
+      } catch (err) {
+        setTimeLogStatus("not_checked_in");
+        setButtonLabel("Check In");
+        setIsButtonDisabled(false);
+      }
+    };
+    if (userDetails?.id) {
+      fetchTodayTimeLog();
+    }
+  }, [userDetails?.id]);
+
   return (
     <View style={styles.container}>
       {/* Sticky Top Bar */}
@@ -45,19 +83,35 @@ export default function HomeScreen() {
       >
         {/* Clock in Card */}
         <CustomCard style={{ gap: 10, display: "flex", alignItems: "center" }}>
-          <View style={styles.clockContainer}>
-            <Text style={styles.cardText}>Current Status</Text>
-            <Text style={styles.cardSubText}>Clocked out</Text>
-            <Clock size={50} />
-          </View>
-          <Button
-            label="Enter Time"
-            backgroundColor={Colors.green20}
-            borderRadius={12}
-            style={{ width: "80%" }}
-            onPress={() => router.push("/time")}
-          />
-        </CustomCard>
+        <View style={styles.clockContainer}>
+          <Text style={styles.cardText}>Current Status</Text>
+          <Text style={styles.cardSubText}>
+            {timeLogStatus === "not_checked_in"
+              ? "Not checked in"
+              : timeLogStatus === "checked_in"
+              ? "Checked in"
+              : "Checked out"}
+          </Text>
+          <Clock size={50} />
+        </View>
+        <Button
+          label={buttonLabel}
+          backgroundColor={Colors.green20}
+          borderRadius={12}
+          style={{ width: "80%" }}
+          onPress={() => {
+            if (timeLogStatus === "not_checked_in") {
+              router.push("/time"); // or trigger check-in logic
+            } else if (timeLogStatus === "checked_in") {
+              router.push("/time"); // or trigger check-out logic
+            } else {
+              // Show a modal or navigate to a screen with today's times
+              router.push("/time");
+            }
+          }}
+          disabled={isButtonDisabled}
+        />
+      </CustomCard>
 
         {/* Schedule Section */}
         <View>
@@ -151,6 +205,7 @@ export default function HomeScreen() {
               label="Request Time-Off"
               backgroundColor={Colors.green20}
               borderRadius={12}
+              onPress={() => router.push("/leave")}
             />
           </CustomCard>
         </View>

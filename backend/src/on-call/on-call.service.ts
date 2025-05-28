@@ -93,20 +93,22 @@ export class OnCallService {
     };
     const calendar: { [date: string]: CalendarDay } = {};
     onCallSlots.forEach((slot) => {
-      const dateStr = slot.date.toISOString().split('T')[0];
+      let dateObj: Date;
+      if (slot.date instanceof Date) {
+        dateObj = slot.date;
+      } else {
+        dateObj = new Date(slot.date);
+      }
+      const dateStr = dateObj.toISOString().split('T')[0];
       if (!calendar[dateStr]) {
         calendar[dateStr] = {
           data: dateStr,
           specialitati: [],
         };
       }
-      // For simplicity, isStaffSufficient is taken directly.
-      // Real logic might involve checking number of assignments vs. a requirement.
       calendar[dateStr].specialitati.push({
         specialitate: slot.specialty,
         personal_suficient: slot.isStaffSufficient,
-        // You might want to count actual assigned personnel here
-        // personal_count: slot.assignments.length
       });
     });
 
