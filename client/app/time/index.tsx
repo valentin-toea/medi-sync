@@ -5,6 +5,7 @@ import DateSelector from "../../components/DateSelector";
 import CheckButton from "../../components/CheckButton";
 import TimeDisplay from "../../components/TimeDisplay";
 import ValidateButton from "../../components/ValidateButton";
+import React from "react";
 
 export default function PontajScreen() {
   const [selectedDate, setSelectedDate] = useState<number>(
@@ -51,7 +52,7 @@ export default function PontajScreen() {
 
   const handleValidate = () => {
     // Here you would typically send the data to a server
-    alert("Pontaj validat cu succes!");
+    alert("Time entry successfully validated");
     setCheckInTime(null);
     setCheckOutTime(null);
     setIsCheckInDisabled(false);
@@ -83,8 +84,8 @@ export default function PontajScreen() {
       </View>
 
       <View style={styles.timesContainer}>
-        <TimeDisplay label="Ora check-in" time={checkInTime} />
-        <TimeDisplay label="Ora check-out" time={checkOutTime} />
+        <TimeDisplay label="Check-in" time={checkInTime} />
+        <TimeDisplay label="Check-out" time={checkOutTime} />
       </View>
 
       <View style={styles.validateContainer}>

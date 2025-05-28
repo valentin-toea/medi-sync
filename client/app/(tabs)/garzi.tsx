@@ -4,6 +4,7 @@ import HospitalInfo from "../../components/HospitalInfo";
 import MonthSelector from "../../components/MonthSelector";
 import GuardDayItem from "../../components/GuardDayItem";
 import { useState } from "react";
+import React from "react";
 
 interface GuardDay {
   id: string;
@@ -49,8 +50,8 @@ export default function TimesheetScreen() {
 
   return (
     <View style={styles.container}>
-      <Header title="Ore de gardă" showBack={false} />
-      <HospitalInfo name="Spitalul Clinic de Urgență București" />
+      <Header title="On-call duty" showBack={false} />
+      <HospitalInfo name="University Hospital" />
       <MonthSelector onMonthChange={handleMonthChange} />
 
       <View style={styles.divider} />
@@ -80,15 +81,15 @@ function generateGuardDaysForMonth(month: number, year: number): GuardDay[] {
   const days: GuardDay[] = [];
 
   const dayNames = [
-    "Duminică",
-    "Luni",
-    "Marți",
-    "Miercuri",
-    "Joi",
-    "Vineri",
-    "Sâmbătă",
+    "Sunday",
+    "Mondey",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
   ];
-  const shortDayNames = ["Du", "Lu", "Ma", "Mi", "Jo", "Vi", "Sa"];
+  const shortDayNames = ["Sun", "Mon", "Tues", "Wed", "Thurs", "Fri", "Sat"];
 
   for (let i = 1; i <= daysInMonth; i++) {
     const date = new Date(year, month, i);
