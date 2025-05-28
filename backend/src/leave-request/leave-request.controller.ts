@@ -27,7 +27,11 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../user/user.entity'; // Assuming UserRole enum exists
-import { LeaveRequest } from './leave-request.entity';
+import { existsSync } from 'fs';
+import { join } from 'path';
+import { createReadStream } from 'fs';
+import { Res } from '@nestjs/common';
+import { Response } from 'express';
 
 @Controller('api/concedii')
 @UseGuards(JwtAuthGuard)
@@ -37,16 +41,49 @@ export class LeaveRequestController {
   @Get(':utilizator_id')
   async getLeaveRequestsByUserId(
     @Param('utilizator_id', ParseIntPipe) userId: number,
-  ): Promise<Partial<LeaveRequest>[]> {
+  ): Promise<any[]> {
     const requests = await this.leaveRequestService.findByUserId(userId);
-    return requests.map((req) => ({
-      id: req.id,
-      data_inceput: req.startDate.toISOString().split('T')[0],
-      data_sfarsit: req.endDate.toISOString().split('T')[0],
-      tip: req.type,
-      status: req.status,
-      // atasament: req.attachment // Optionally include if needed in list view
-    }));
+    return requests.map((req) => {
+      return {
+        id: req.id,
+        data_inceput: req.startDate
+          ? req.startDate instanceof Date
+            ? req.startDate.toISOString().split('T')[0]
+            : new Date(req.startDate).toISOString().split('T')[0]
+          : null,
+        data_sfarsit: req.endDate
+          ? req.endDate instanceof Date
+            ? req.endDate.toISOString().split('T')[0]
+            : new Date(req.endDate).toISOString().split('T')[0]
+          : null,
+        tip: req.type,
+        status: req.status,
+      };
+    });
+  }
+
+  @Get('download/:leaveRequestId')
+  async downloadAttachment(
+    @Param('leaveRequestId', ParseIntPipe) leaveRequestId: number,
+    @Res() res: Response,
+  ) {
+    const leaveRequest =
+      await this.leaveRequestService.findById(leaveRequestId);
+    if (!leaveRequest || !leaveRequest.attachment) {
+      return res.status(404).json({ mesaj: 'Attachment not found' });
+    }
+
+    const filePath = join(process.cwd(), leaveRequest.attachment);
+    if (!existsSync(filePath)) {
+      return res.status(404).json({ mesaj: 'File not found on server' });
+    }
+
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${leaveRequest.attachment.split('/').pop()}"`,
+    );
+    const fileStream = createReadStream(filePath);
+    fileStream.pipe(res);
   }
 
   @Post()

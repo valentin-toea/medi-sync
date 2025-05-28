@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import {
   IsNotEmpty,
-  IsString,
   IsDateString,
   IsEnum,
-  IsOptional,
   IsNumber,
+  IsString,
+  IsOptional,
 } from 'class-validator';
 import { LeaveRequestType } from '../leave-request.entity';
 
@@ -16,11 +15,11 @@ export class CreateLeaveRequestDto {
 
   @IsDateString()
   @IsNotEmpty()
-  startDate: string; // YYYY-MM-DD
+  startDate: string;
 
   @IsDateString()
   @IsNotEmpty()
-  endDate: string; // YYYY-MM-DD
+  endDate: string;
 
   @IsEnum(LeaveRequestType)
   @IsNotEmpty()

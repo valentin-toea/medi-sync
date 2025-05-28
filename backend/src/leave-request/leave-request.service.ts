@@ -43,6 +43,18 @@ export class LeaveRequestService {
     });
   }
 
+  async findById(leaveRequestId: number): Promise<LeaveRequest> {
+    const leaveRequest = await this.leaveRequestRepository.findOneBy({
+      id: leaveRequestId,
+    });
+    if (!leaveRequest) {
+      throw new NotFoundException(
+        `Leave request with ID ${leaveRequestId} not found.`,
+      );
+    }
+    return leaveRequest;
+  }
+
   async updateStatus(
     leaveRequestId: number,
     updateDto: UpdateLeaveRequestStatusDto,
