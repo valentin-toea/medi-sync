@@ -1,9 +1,9 @@
-import { View, StyleSheet, FlatList } from 'react-native';
-import Header from '../../components/Header';
-import HospitalInfo from '../../components/HospitalInfo';
-import MonthSelector from '../../components/MonthSelector';
-import GuardDayItem from '../../components/GuardDayItem';
-import { useState } from 'react';
+import { View, StyleSheet, FlatList } from "react-native";
+import Header from "../../components/Header";
+import HospitalInfo from "../../components/HospitalInfo";
+import MonthSelector from "../../components/MonthSelector";
+import GuardDayItem from "../../components/GuardDayItem";
+import { useState } from "react";
 
 interface GuardDay {
   id: string;
@@ -17,7 +17,9 @@ interface GuardDay {
 export default function TimesheetScreen() {
   const [month, setMonth] = useState<number>(new Date().getMonth());
   const [year, setYear] = useState<number>(new Date().getFullYear());
-  const [guardDays, setGuardDays] = useState<GuardDay[]>(generateGuardDaysForMonth(month, year));
+  const [guardDays, setGuardDays] = useState<GuardDay[]>(
+    generateGuardDaysForMonth(month, year)
+  );
 
   const handleMonthChange = (newMonth: number, newYear: number) => {
     setMonth(newMonth);
@@ -26,19 +28,23 @@ export default function TimesheetScreen() {
   };
 
   const toggleDaySlot = (id: string) => {
-    setGuardDays(guardDays.map(day => 
-      day.id === id 
-        ? { ...day, daySlotAvailable: !day.daySlotAvailable } 
-        : day
-    ));
+    setGuardDays(
+      guardDays.map((day) =>
+        day.id === id
+          ? { ...day, daySlotAvailable: !day.daySlotAvailable }
+          : day
+      )
+    );
   };
 
   const toggleNightSlot = (id: string) => {
-    setGuardDays(guardDays.map(day => 
-      day.id === id 
-        ? { ...day, nightSlotAvailable: !day.nightSlotAvailable } 
-        : day
-    ));
+    setGuardDays(
+      guardDays.map((day) =>
+        day.id === id
+          ? { ...day, nightSlotAvailable: !day.nightSlotAvailable }
+          : day
+      )
+    );
   };
 
   return (
@@ -46,9 +52,9 @@ export default function TimesheetScreen() {
       <Header title="Ore de gardă" showBack={false} />
       <HospitalInfo name="Spitalul Clinic de Urgență București" />
       <MonthSelector onMonthChange={handleMonthChange} />
-      
+
       <View style={styles.divider} />
-      
+
       <FlatList
         data={guardDays}
         keyExtractor={(item) => item.id}
@@ -72,16 +78,24 @@ export default function TimesheetScreen() {
 function generateGuardDaysForMonth(month: number, year: number): GuardDay[] {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const days: GuardDay[] = [];
-  
-  const dayNames = ['Duminică', 'Luni', 'Marți', 'Miercuri', 'Joi', 'Vineri', 'Sâmbătă'];
-  const shortDayNames = ['Du', 'Lu', 'Ma', 'Mi', 'Jo', 'Vi', 'Sa'];
-  
+
+  const dayNames = [
+    "Duminică",
+    "Luni",
+    "Marți",
+    "Miercuri",
+    "Joi",
+    "Vineri",
+    "Sâmbătă",
+  ];
+  const shortDayNames = ["Du", "Lu", "Ma", "Mi", "Jo", "Vi", "Sa"];
+
   for (let i = 1; i <= daysInMonth; i++) {
     const date = new Date(year, month, i);
     const dayOfWeek = date.getDay();
-    
+
     days.push({
-      id: `${year}-${month+1}-${i}`,
+      id: `${year}-${month + 1}-${i}`,
       day: i,
       dayName: dayNames[dayOfWeek],
       dayOfWeek: shortDayNames[dayOfWeek],
@@ -89,21 +103,22 @@ function generateGuardDaysForMonth(month: number, year: number): GuardDay[] {
       nightSlotAvailable: Math.random() > 0.7, // Random initial state for demo
     });
   }
-  
+
   return days;
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: "white",
   },
   divider: {
     height: 1,
-    backgroundColor: '#EEEEEE',
+    backgroundColor: "#EEEEEE",
     marginVertical: 8,
   },
   listContent: {
     paddingHorizontal: 16,
+    paddingBottom: 100,
   },
 });
