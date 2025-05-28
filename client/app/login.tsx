@@ -1,8 +1,8 @@
-import { TopBar } from "@/components/TopBar";
+import axios from "axios";
 import { router } from "expo-router";
 import { Lock, Mail } from "lucide-react-native";
 import React, { useState } from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { Alert, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Button, Colors, Text, TextField } from "react-native-ui-lib";
 
 export default function LoginScreen() {
@@ -10,13 +10,26 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      router.replace("/(tabs)");
-    }, 1000);
-  };
+  const handleLogin = async () => {
+  setLoading(true);
+  try {
+    const response = await axios.post("http://localhost:3000/api/auth/login", {
+      email,
+      password,
+    });
+
+    const { token, utilizator } = response.data;
+
+    console.log("Login success:", utilizator);
+
+    router.replace("/(tabs)"); // Navigate to home/dashboard
+  } catch (error) {
+    console.error("Login failed:", error);
+    Alert.alert("Login failed", "Invalid credentials or server error.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <View style={styles.container}>
