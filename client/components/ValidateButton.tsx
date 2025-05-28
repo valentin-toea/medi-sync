@@ -1,3 +1,4 @@
+import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 
 interface ValidateButtonProps {
@@ -13,7 +14,7 @@ export default function ValidateButton({ onPress, disabled = false }: ValidateBu
       disabled={disabled}
     >
       <Text style={[styles.buttonText, disabled && styles.disabledText]}>
-        Validează
+        Validate
       </Text>
     </TouchableOpacity>
   );
