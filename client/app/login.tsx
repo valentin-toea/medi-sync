@@ -1,35 +1,28 @@
-import axios from "axios";
 import { router } from "expo-router";
 import { Lock, Mail } from "lucide-react-native";
 import React, { useState } from "react";
 import { Alert, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Button, Colors, Text, TextField } from "react-native-ui-lib";
+import { useAuthStore } from "./store/auth.store";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const login = useAuthStore((state) => state.login);
+
   const handleLogin = async () => {
-  setLoading(true);
-  try {
-    const response = await axios.post("http://localhost:3000/api/auth/login", {
-      email,
-      password,
-    });
-
-    const { token, utilizator } = response.data;
-
-    console.log("Login success:", utilizator);
-
-    router.replace("/(tabs)"); // Navigate to home/dashboard
-  } catch (error) {
-    console.error("Login failed:", error);
-    Alert.alert("Login failed", "Invalid credentials or server error.");
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
+    try {
+      await login(email, password);
+      router.replace("/(tabs)");
+    } catch {
+      Alert.alert("Login failed", "Invalid credentials or server error.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>

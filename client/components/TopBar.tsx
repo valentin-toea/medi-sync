@@ -2,8 +2,10 @@ import { TOP_BAR_HEIGHT } from "@/constants/Sizes";
 import { router } from "expo-router";
 import { Bell, LogOut } from "lucide-react-native";
 import { StyleSheet, TouchableOpacity, View as RNView } from "react-native";
-import { Avatar, Button, Colors, Modal, Text, View } from "react-native-ui-lib";
-import { useEffect, useRef, useState } from "react";
+import { Avatar, Button, Colors, Text, View } from "react-native-ui-lib";
+import { useState } from "react";
+import BottomSheet from "@/components/BottomSheet"; // adjust the import path as needed
+import { useAuthStore } from "@/app/store/auth.store";
 
 export function TopBar({
   hideUser,
@@ -12,36 +14,21 @@ export function TopBar({
   hideUser?: boolean;
   hideNotifications?: boolean;
 }) {
-  const user = { name: "Dr. Test User" };
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [dropdownCoords, setDropdownCoords] = useState({ x: 0, y: 0 });
-
-  const avatarGroupRef = useRef<RNView>(null);
-
-  const openDropdown = () => {
-    avatarGroupRef.current?.measureInWindow((x, y, _, height) => {
-      setDropdownCoords({ x, y: y + height + 5 });
-      setShowDropdown(true);
-    });
-  };
-
-  const closeDropdown = () => setShowDropdown(false);
-
-  useEffect(() => {
-    return () => closeDropdown();
-  }, []);
+  const userDetails = useAuthStore((state) => state.userDetails);
+  const userName = `${userDetails?.lastName} ${userDetails?.firstName}`;
+  const [showSheet, setShowSheet] = useState(false);
 
   return (
     <View style={styles.topBarWrapper}>
       <View style={styles.topBar}>
-        <RNView style={styles.avatarGroup} ref={avatarGroupRef}>
+        <RNView style={styles.avatarGroup}>
           {!hideUser && (
             <TouchableOpacity
-              onPress={openDropdown}
+              onPress={() => setShowSheet(true)}
               style={styles.userTouchable}
             >
               <Avatar
-                label={user.name
+                label={userName
                   .split(" ")
                   .map((n) => n[0])
                   .join("")
@@ -51,7 +38,7 @@ export function TopBar({
                 size={30}
               />
               <View style={styles.textContainer}>
-                <Text style={styles.userName}>{user.name}</Text>
+                <Text style={styles.userName}>{userName}</Text>
               </View>
             </TouchableOpacity>
           )}
@@ -67,41 +54,27 @@ export function TopBar({
         )}
       </View>
 
-      <Modal
-        visible={showDropdown}
-        onBackgroundPress={closeDropdown}
-        transparent
-        overlayBackgroundColor="transparent"
-        animationType="fade"
+      <BottomSheet
+        visible={showSheet}
+        onClose={() => setShowSheet(false)}
+        title="Account"
       >
-        <View
-          style={[
-            styles.dropdownWrapper,
-            { top: dropdownCoords.y, left: dropdownCoords.x },
-          ]}
+        <TouchableOpacity
+          activeOpacity={0.6}
+          style={styles.dropdownItem}
+          onPress={() => {
+            setShowSheet(false);
+            router.replace("/login");
+          }}
         >
-          <View style={styles.dropdown}>
-            <TouchableOpacity
-              activeOpacity={0.6}
-              style={styles.dropdownItem}
-              onPress={() => {
-                router.replace("/login");
-              }}
-            >
-              <View style={styles.logoutRow}>
-                <LogOut
-                  size={16}
-                  color={Colors.red20}
-                  style={{ marginRight: 8 }}
-                />
-                <Text style={styles.dropdownText} color={Colors.red20}>
-                  Logout
-                </Text>
-              </View>
-            </TouchableOpacity>
+          <View style={styles.logoutRow}>
+            <LogOut size={16} color={Colors.red20} style={{ marginRight: 8 }} />
+            <Text style={styles.dropdownText} color={Colors.red20}>
+              Logout
+            </Text>
           </View>
-        </View>
-      </Modal>
+        </TouchableOpacity>
+      </BottomSheet>
     </View>
   );
 }
@@ -137,23 +110,8 @@ const styles = StyleSheet.create({
     color: Colors.text,
     fontWeight: "500",
   },
-  dropdownWrapper: {
-    position: "absolute",
-    zIndex: 99,
-  },
-  dropdown: {
-    backgroundColor: Colors.white,
-    borderRadius: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 8,
-    minWidth: 160,
-  },
   dropdownItem: {
-    paddingVertical: 10,
+    paddingVertical: 12,
   },
   dropdownText: {
     fontSize: 16,
