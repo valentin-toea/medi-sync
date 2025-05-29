@@ -69,7 +69,7 @@ const ResidencyScreen = () => {
 
   const renderFutureStages = () => (
     <View>
-      <Text style={styles.sectionTitle}>Other Tab Content</Text>
+      <Text style={styles.sectionTitle}>Coming soon...</Text>
     </View>
   );
 

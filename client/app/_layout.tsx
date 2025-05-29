@@ -11,6 +11,8 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { Colors, Typography, Spacings } from "react-native-ui-lib";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useNotificationsStore } from "@/store/notification.store";
+import { useEffect } from "react";
 
 Colors.loadColors({
   primary: "#0a7ea4",
@@ -36,6 +38,22 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
+
+  const fetchNotifications = useNotificationsStore(
+    (state) => state.fetchNotifications
+  );
+  const startNotificationPolling = useNotificationsStore(
+    (state) => state.startPolling
+  );
+  const stopNotificationPolling = useNotificationsStore(
+    (state) => state.stopPolling
+  );
+
+  useEffect(() => {
+    fetchNotifications();
+    startNotificationPolling();
+    return () => stopNotificationPolling();
+  }, [fetchNotifications, startNotificationPolling, stopNotificationPolling]);
 
   if (!loaded) {
     // Async font loading only occurs in development.
