@@ -1,22 +1,40 @@
 import BottomSheet from "@/components/BottomSheet";
 import { CustomCard } from "@/components/CustomCard";
 import { Plus, Upload } from "lucide-react-native";
-import React, { useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
+import React, { useEffect, useState } from "react";
+import { ActionSheetIOS, Platform, ScrollView, StyleSheet, View, Alert, TouchableOpacity } from "react-native";
 import { Calendar } from "react-native-calendars";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { Button, Colors, Text } from "react-native-ui-lib";
+import { Button, Colors, SegmentedControl, Text } from "react-native-ui-lib";
+import api from "@/services/api";
+import { useAuthStore } from "@/store/auth.store";
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 type LeaveRequest = {
+  id: any;
+  status: React.ReactNode;
   start: string; // "YYYY-MM-DD"
   end: string;
 };
 
+const leaveTypes = [
+  { label: "Rest", value: "concediu_odihna" },
+  { label: "Medical", value: "concediu_medical" },
+  { label: "Unpaid", value: "concediu_fara_plata" },
+  { label: "Other", value: "altul" },
+];
+
 export default function LeaveScreen() {
+  const userDetails = useAuthStore((state) => state.userDetails);
   const [modalVisible, setModalVisible] = useState(false);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [pendingRequests, setPendingRequests] = useState<LeaveRequest[]>([]);
+  const [attachment, setAttachment] = useState<any>(null);
+  const [leaveTypeIndex, setLeaveTypeIndex] = useState(1); // default to Medical
 
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
   const [pickingStart, setPickingStart] = useState(true);
@@ -24,18 +42,146 @@ export default function LeaveScreen() {
   const formatDate = (date: Date | null) =>
     date ? date.toISOString().split("T")[0] : "";
 
-  const handleAddRequest = () => {
-    if (startDate && endDate) {
-      const startStr = formatDate(startDate);
-      const endStr = formatDate(endDate);
+  useEffect(() => {
+    const fetchRequests = async () => {
+      if (!userDetails?.id) return;
+      try {
+        const res = await api.get(`/api/concedii/${userDetails.id}`);
+        // The backend returns an array of { id, data_inceput, data_sfarsit, tip, status }
+        setPendingRequests(
+          res.data.map((req: any) => ({
+            start: req.data_inceput,
+            end: req.data_sfarsit,
+            type: req.tip,
+            status: req.status,
+            id: req.id,
+          }))
+        );
+      } catch (err) {
+        Alert.alert("Error", "Could not fetch leave requests.");
+      }
+    };
+    fetchRequests();
+  }, [userDetails?.id]);
 
-      setPendingRequests([
-        ...pendingRequests,
-        { start: startStr, end: endStr },
-      ]);
-      setStartDate(null);
-      setEndDate(null);
-      setModalVisible(false);
+  const handleAddRequest = async () => {
+    if (startDate && endDate) {
+      const formData = new FormData();
+      formData.append("userId", String(userDetails?.id || 0));
+      formData.append("startDate", formatDate(startDate));
+      formData.append("endDate", formatDate(endDate));
+      formData.append("type", leaveTypes[leaveTypeIndex].value);
+
+      if (attachment) {
+        formData.append("atasament", {
+          uri: attachment.uri,
+          name: attachment.name || "attachment.jpg",
+          type: attachment.mimeType || "image/jpeg",
+        } as any);
+      }
+
+      try {
+        const result = await api.post("api/concedii", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        Alert.alert("Success", "Leave request submitted!");
+        setPendingRequests([
+          ...pendingRequests,
+          {
+            start: formatDate(startDate), end: formatDate(endDate),
+            id: result.data.id,
+            status: "in_asteptare",
+          },
+        ]);
+        setStartDate(null);
+        setEndDate(null);
+        setAttachment(null);
+        setModalVisible(false);
+      } catch (error) {
+        Alert.alert("Error", "Failed to submit leave request.");
+      }
+    }
+  };
+
+   const handleAddAttachment = async () => {
+    const openCamera = async () => {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission required', 'Camera permission is required to take a photo.');
+        return;
+      }
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 1,
+      });
+      if (!result.canceled) {
+        setAttachment(result.assets[0]);
+        Alert.alert('Photo selected', result.assets[0].uri);
+      }
+    };
+  
+    const openDocument = async () => {
+      const doc = await DocumentPicker.getDocumentAsync({});
+      if (!doc.canceled && doc.assets && doc.assets[0]) {
+        setAttachment(doc.assets[0]);
+        Alert.alert('Document selected', doc.assets[0].uri);
+      }
+    };
+  
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Cancel', 'Take Photo', 'Pick Document'],
+          cancelButtonIndex: 0,
+        },
+        async (buttonIndex) => {
+          if (buttonIndex === 1) {
+            await openCamera();
+          } else if (buttonIndex === 2) {
+            await openDocument();
+          }
+        }
+      );
+    } else {
+      Alert.alert(
+        'Add Attachment',
+        'Choose an option',
+        [
+          { text: 'Take Photo', onPress: openCamera },
+          { text: 'Pick Document', onPress: openDocument },
+          { text: 'Cancel', style: 'cancel' },
+        ]
+      );
+    }
+  };
+
+  const handleDownloadAttachment = async (leaveRequestId: number) => {
+    try {
+      const url = `${api.defaults.baseURL}/api/concedii/download/${leaveRequestId}`;
+      const fileUri = FileSystem.cacheDirectory + `attachment-${leaveRequestId}`;
+      const downloadResumable = FileSystem.createDownloadResumable(
+        url,
+        fileUri,
+        {
+          headers: {
+            Authorization: String(api.defaults.headers.common["Authorization"] ?? ""),
+          },
+        }
+      );
+      const downloadResult = await downloadResumable.downloadAsync();
+      if (downloadResult && downloadResult.uri) {
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(downloadResult.uri);
+        } else {
+          Alert.alert("Downloaded", "File downloaded to: " + downloadResult.uri);
+        }
+      } else {
+        Alert.alert("Error", "Download failed.");
+      }
+    } catch (err) {
+      Alert.alert("Error", "Could not download or open the attachment.");
     }
   };
 
@@ -99,14 +245,19 @@ export default function LeaveScreen() {
             No pending requests
           </Text>
         ) : (
-          pendingRequests.map((req, index) => (
-            <View key={index} style={styles.statusCard}>
-              <Text style={styles.statusText}>
-                Leave request {req.start} - {req.end}
-              </Text>
-              <Text style={styles.statusPending}>STATUS: Pending</Text>
-              <View style={styles.divider} />
-            </View>
+        pendingRequests.map((req, index) => (
+          <TouchableOpacity
+            key={req.id ?? index}
+            style={styles.statusCard}
+            onPress={() => handleDownloadAttachment(req.id)}
+            disabled={!req.id} // Only enable if id exists
+          >
+            <Text style={styles.statusText}>
+              Leave request {req.start} - {req.end}
+            </Text>
+            <Text style={styles.statusPending}>STATUS: {req.status}</Text>
+            <View style={styles.divider} />
+          </TouchableOpacity>
           ))
         )}
       </ScrollView>
@@ -119,6 +270,12 @@ export default function LeaveScreen() {
       >
         <View style={styles.modalContent}>
           <Text style={styles.modalSubtitle}>Select period</Text>
+          <SegmentedControl
+            segments={leaveTypes.map((t) => ({ label: t.label }))}
+            onChangeIndex={setLeaveTypeIndex}
+            initialIndex={leaveTypeIndex}
+            containerStyle={{ marginBottom: 16 }}
+          />
 
           {/* Start Date Picker Trigger */}
           <Button
@@ -173,7 +330,7 @@ export default function LeaveScreen() {
             borderRadius={12}
             iconSource={() => <Plus size={18} color="white" />}
             style={{ marginTop: 16 }}
-            onPress={handleAddRequest}
+            onPress={handleAddAttachment}
           />
 
           <Upload
