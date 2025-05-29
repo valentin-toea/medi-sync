@@ -9,6 +9,7 @@ import { getScheduleStatus } from "@/utils/getScheduleStatus";
 import { router } from "expo-router";
 import { Clock, Loader } from "lucide-react-native";
 import React, { useEffect, useMemo, useState } from "react";
+import { useFocusEffect } from "expo-router";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Calendar } from "react-native-calendars";
 import { Button, Colors, Text } from "react-native-ui-lib";
@@ -32,6 +33,33 @@ export default function HomeScreen() {
     [scheduleList]
   );
 
+  const fetchTodayTimeLog = async () => {
+    try {
+      const todayStr = new Date().toISOString().split("T")[0];
+      const res = await api.get(`/api/pontaj/${userDetails?.id ?? 1}`, {
+        params: { data: todayStr },
+      });
+      const inregistrari = res.data.inregistrari;
+      if (!inregistrari || !inregistrari.check_in) {
+        setTimeLogStatus("not_checked_in");
+        setButtonLabel("Check In");
+        setIsButtonDisabled(false);
+      } else if (inregistrari.check_in && !inregistrari.check_out) {
+        setTimeLogStatus("checked_in");
+        setButtonLabel("Check Out");
+        setIsButtonDisabled(false);
+      } else if (inregistrari.check_in && inregistrari.check_out) {
+        setTimeLogStatus("checked_out");
+        setButtonLabel("View Times");
+        setIsButtonDisabled(false);
+      }
+    } catch (err) {
+      setTimeLogStatus("not_checked_in");
+      setButtonLabel("Check In");
+      setIsButtonDisabled(false);
+    }
+  };
+
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date());
@@ -41,36 +69,19 @@ export default function HomeScreen() {
   }, []);
 
   useEffect(() => {
-    const fetchTodayTimeLog = async () => {
-      try {
-        const todayStr = new Date().toISOString().split("T")[0];
-        const res = await api.get(`/api/pontaj/${userDetails?.id ?? 1}`, {
-          params: { data: todayStr },
-        });
-        const inregistrari = res.data.inregistrari;
-        if (!inregistrari || !inregistrari.check_in) {
-          setTimeLogStatus("not_checked_in");
-          setButtonLabel("Check In");
-          setIsButtonDisabled(false);
-        } else if (inregistrari.check_in && !inregistrari.check_out) {
-          setTimeLogStatus("checked_in");
-          setButtonLabel("Check Out");
-          setIsButtonDisabled(false);
-        } else if (inregistrari.check_in && inregistrari.check_out) {
-          setTimeLogStatus("checked_out");
-          setButtonLabel("View Times");
-          setIsButtonDisabled(false);
-        }
-      } catch (err) {
-        setTimeLogStatus("not_checked_in");
-        setButtonLabel("Check In");
-        setIsButtonDisabled(false);
-      }
-    };
     if (userDetails?.id) {
       fetchTodayTimeLog();
     }
-  }, [userDetails?.id]);
+  }, [fetchTodayTimeLog, userDetails?.id]);
+
+    useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+    if (userDetails?.id) {
+      fetchTodayTimeLog();
+      interval = setInterval(fetchTodayTimeLog, 5000); // every 5 seconds
+    }
+    return () => clearInterval(interval);
+  }, [fetchTodayTimeLog, userDetails?.id]);
 
   return (
     <View style={styles.container}>

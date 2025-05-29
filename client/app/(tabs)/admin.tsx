@@ -17,6 +17,15 @@ import api from "@/services/api";
 
 const availableReplacements = ["Panaete Crina", "Dimitrie Sidonia"];
 
+const departmentsForDate = [
+  "PEDIATRICS",
+  "DERMATOLOGY",
+  "ORTHOPEDICS",
+  "GENERAL SURGERY",
+  "CARDIOLOGY",
+  "ONCOLOGY",
+];
+
 export default function AdminScreen() {
   const [tab, setTab] = useState(0);
   const [showShiftDetails, setShowShiftDetails] = useState(false);
@@ -27,7 +36,54 @@ export default function AdminScreen() {
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
       return today.toISOString().split("T")[0];
-  });
+  });  
+  const [nurseRequestSentFor, setNurseRequestSentFor] = useState<{dept: string, date: string} | null>(null);
+    // In your renderShiftOverview or useEffect, for each department:
+  const [specialtyStatus, setSpecialtyStatus] = useState<{[key: string]: any}>({});
+  const [shiftDetails, setShiftDetails] = useState<any>(null);
+  
+  const handleDepartmentPress = async (dept: string) => {
+    const specialtyData = specialtyStatus[dept];
+    console.log("Handling department press for:", specialtyData);
+  
+    if (!specialtyData) return;
+  
+    if (!specialtyData.detalii.personal_suficient) {
+      setShiftDetails({ type: "insufficient", dept, date: selectedDate });
+      setShowShiftDetails(true);
+    } else {
+      // Fetch full details by onCallId
+      console.log("Fetching shift details for:", specialtyData.id);
+      const onCallId = specialtyData.id;
+      const res = await api.get(`/api/garda/details/${onCallId}`);
+      console.log("Shift details response:", res.data);
+      setShiftDetails({ type: "sufficient", data: res.data });
+      setShowShiftDetails(true);
+    }
+  };
+  
+    useEffect(() => {
+      if (tab !== 1) return; // Only fetch when Shifts tab is active
+      async function fetchSpecialtyStatus() {
+        const status: {[key: string]: any} = {};
+        for (const dept of departmentsForDate) {
+          try {
+            const res = await api.get(`/api/garda/${selectedDate}/${dept}`);
+            if (res.data && res.data.detalii && typeof res.data.detalii.personal_suficient === "boolean") {
+              status[dept] = res.data;
+            } else {
+              // If response is empty or malformed, treat as insufficient
+              status[dept] = { detalii: { personal_suficient: false } };
+            }
+          } catch (err) {
+            // On error, treat as insufficient
+            status[dept] = { detalii: { personal_suficient: false } };
+          }
+        }
+        setSpecialtyStatus(status);
+      }
+      fetchSpecialtyStatus();
+    }, [selectedDate, tab]);
 
   // Doctor state
   const [doctors, setDoctors] = useState<any[]>([]);
@@ -39,7 +95,6 @@ export default function AdminScreen() {
      const fetchDoctors = async () => {
        try {
          const res = await api.get("/api/utilizatori");
-         console.log("Fetched doctors:", res.data);
          setDoctors(res.data);
        } catch (err) {
         // handle error
@@ -137,15 +192,6 @@ export default function AdminScreen() {
       return d;
     });
 
-    const departmentsForDate = [
-      "Pediatrics",
-      "Dermatology",
-      "Orthopedics",
-      "General Surgery",
-      "Gynecology",
-      "Oncology",
-    ];
-
     return (
       <>
         <View style={styles.weekCalendar}>
@@ -170,18 +216,18 @@ export default function AdminScreen() {
         </View>
 
         <ScrollView style={styles.scrollContainer}>
-          {departmentsForDate.map((dept, idx) => (
+                    {departmentsForDate.map((dept, idx) => (
             <TouchableOpacity
               key={idx}
-              onPress={() => dept === "Pediatrics" ? setShowShiftDetails(true) : {}}
+              onPress={() => handleDepartmentPress(dept)}
               style={{ marginBottom: 12 }}
             >
               <CustomCard>
                 <View>
-                  <Text style={[styles.doctorName, dept === "Pediatrics" && { color: Colors.red30 }]}>
+                  <Text style={[styles.doctorName, /* ... */]}>
                     {dept.toUpperCase()}
                   </Text>
-                  {dept === "Pediatrics" && (
+                  {specialtyStatus[dept] && !specialtyStatus[dept].detalii.personal_suficient && (
                     <Text style={{ color: Colors.red30 }}>INSUFFICIENT STAFF</Text>
                   )}
                 </View>
@@ -194,11 +240,25 @@ export default function AdminScreen() {
     );
   };
 
-  const renderShiftDetails = () => (
-    <ScrollView style={styles.scrollContainer}>
-      <Text style={styles.shiftHeader}>PEDIATRICS {selectedDate.split("-").reverse().join(".")}</Text>
-      <Text style={styles.missingNotice}>08:00 - 20:00</Text>
+    const renderShiftDetails = () => {
+    if (!shiftDetails) return null;
+    if (shiftDetails.type === "insufficient") {
+      // Show your hardcoded insufficient staff UI
+      return (
+        <ScrollView style={styles.scrollContainer}>
+          <Text style={styles.shiftHeader}>{shiftDetails.dept.toUpperCase()} {shiftDetails.date.split("-").reverse().join(".")}</Text>
+          <Text style={styles.redText}>INSUFFICIENT STAFF</Text>
+          
+
+      <Text style={styles.missingNotice}>00:00 - 23:59</Text>
       <Text style={styles.redText}>MISSING: 1 NURSE</Text>
+            {nurseRequestSentFor &&
+       shiftDetails.dept === nurseRequestSentFor.dept &&
+       shiftDetails.date === nurseRequestSentFor.date && (
+        <Text style={{ color: Colors.green30, fontWeight: "bold", marginBottom: 12 }}>
+          Request for nurse sent.
+        </Text>
+      )}
       <Button
         label="CHECK STAFF AVAILABILITY"
         backgroundColor={Colors.red30}
@@ -210,28 +270,25 @@ export default function AdminScreen() {
       <Text style={styles.sectionHeader}>Current Staff:</Text>
       <Text>Dr. Anghel Mihai</Text>
       <Text>Dr. Mircea Andreea (Resident)</Text>
-      <Text>Nurse 1: Mihai Silvia</Text>
-      <Text>Nurse 2: -</Text>
-      <Text>Orderly: Hristea Corina</Text>
 
-      <View style={styles.divider} />
-
-      <Text style={styles.sectionHeader}>20:00 - 08:00</Text>
-      <Text>Dr. Costescu Laura</Text>
-      <Text>Dr. Andon Andrei (Resident)</Text>
-      <Text>Nurse 1: Muraru Traian</Text>
-      <Text>Nurse 2: Jianu Andra</Text>
-      <Text>Orderly: Corneliu Horia</Text>
-
-      <Button
-        label="Back"
-        backgroundColor={Colors.grey40}
-        borderRadius={8}
-        style={{ marginTop: 20 }}
-        onPress={() => setShowShiftDetails(false)}
-      />
-    </ScrollView>
-  );
+          <Button label="Back" style={{ marginTop: 20 }} onPress={() => setShowShiftDetails(false)} />
+        </ScrollView>
+      );
+    } else if (shiftDetails.type === "sufficient") {
+      // Show details from backend
+      const { data } = shiftDetails;
+      return (
+        <ScrollView style={styles.scrollContainer}>
+          <Text style={styles.shiftHeader}>{data.specialty} {data.date.split("-").reverse().join(".")}</Text>
+          <Text style={styles.sectionHeader}>Staff:</Text>
+          {data.assignments.map((a: any) => (
+            <Text key={a.assignmentId}>{a.role}: {a.name}</Text>
+          ))}
+          <Button label="Back" style={{ marginTop: 20 }} onPress={() => setShowShiftDetails(false)} />
+        </ScrollView>
+      );
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -350,7 +407,10 @@ export default function AdminScreen() {
             <Button
               label="Save"
               backgroundColor={Colors.green20}
-              onPress={() => setShowModal(false)}
+              onPress={() => {
+                setShowModal(false);
+                setNurseRequestSentFor({ dept: shiftDetails.dept, date: shiftDetails.date });
+              }}
               style={{ marginTop: 20 }}
             />
           </View>

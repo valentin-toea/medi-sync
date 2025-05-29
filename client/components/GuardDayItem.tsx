@@ -5,18 +5,16 @@ interface GuardDayItemProps {
   day: number;
   dayName: string;
   daySlotAvailable: boolean;
-  nightSlotAvailable: boolean;
   onToggleDaySlot: () => void;
-  onToggleNightSlot: () => void;
+  disabled?: boolean;
 }
 
 export default function GuardDayItem({
   day,
   dayName,
   daySlotAvailable,
-  nightSlotAvailable,
   onToggleDaySlot,
-  onToggleNightSlot,
+  disabled = false, // <-- add default
 }: GuardDayItemProps) {
   return (
     <View style={styles.container}>
@@ -27,17 +25,9 @@ export default function GuardDayItem({
       
       <View style={styles.slotsContainer}>
         <GuardSlot 
-          timeRange="07:00 - 19:00" 
+          timeRange="00:00 - 23:59" 
           isAvailable={daySlotAvailable} 
-          onToggle={onToggleDaySlot} 
-        />
-        
-        <View style={styles.slotSpacer} />
-        
-        <GuardSlot 
-          timeRange="19:00 - 07:00" 
-          isAvailable={nightSlotAvailable} 
-          onToggle={onToggleNightSlot} 
+          onToggle={disabled ? () => {} : onToggleDaySlot} // <-- disable toggle
         />
       </View>
     </View>
