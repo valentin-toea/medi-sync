@@ -4,7 +4,7 @@ import { Repository, Between } from 'typeorm';
 import { OnCall } from './on-call.entity';
 import { OnCallAssignment } from './on-call-assignment.entity';
 import { User } from '../user/user.entity';
-import { CreateOnCallDto } from './dto/create-on-call.dto';
+import { UserRole } from '../user/user.entity';
 
 @Injectable()
 export class OnCallService {
@@ -17,56 +17,71 @@ export class OnCallService {
     private userRepository: Repository<User>,
   ) {}
 
-  async createOrUpdateOnCall(dto: CreateOnCallDto): Promise<OnCall> {
+  async autoAssignUserToOnCall(
+    userId: number,
+    dateStr: string,
+  ): Promise<OnCall> {
+    const user = await this.userRepository.findOneBy({ id: userId });
+    if (!user) throw new NotFoundException('User not found');
+
+    // Parse date and set to start of day
+    const date = new Date(dateStr);
+    date.setHours(0, 0, 0, 0);
+
+    // 1. Find or create OnCall for date and user's specialty
     let onCall = await this.onCallRepository.findOne({
-      where: { date: new Date(dto.date), specialty: dto.specialty },
-    });
-
-    if (onCall) {
-      // Update existing
-      onCall.details = dto.details ?? onCall.details;
-      onCall.isStaffSufficient =
-        dto.isStaffSufficient ?? onCall.isStaffSufficient;
-    } else {
-      // Create new
-      onCall = this.onCallRepository.create({
-        date: new Date(dto.date),
-        specialty: dto.specialty,
-        details: dto.details,
-        isStaffSufficient: dto.isStaffSufficient ?? false,
-      });
-    }
-    const savedOnCall = await this.onCallRepository.save(onCall);
-
-    if (dto.assignments) {
-      // Clear existing assignments for this onCall if updating
-      await this.onCallAssignmentRepository.delete({
-        onCallId: savedOnCall.id,
-      });
-      for (const assignmentDto of dto.assignments) {
-        const user = await this.userRepository.findOneBy({
-          id: assignmentDto.userId,
-        });
-        if (user) {
-          const assignment = this.onCallAssignmentRepository.create({
-            ...assignmentDto,
-            onCall: savedOnCall,
-            user,
-          });
-          await this.onCallAssignmentRepository.save(assignment);
-        }
-      }
-    }
-    const result = await this.onCallRepository.findOne({
-      where: { id: savedOnCall.id },
+      where: { date, specialty: user.specialty },
       relations: ['assignments', 'assignments.user'],
     });
-    if (!result) {
-      throw new NotFoundException(
-        `On-call with id ${savedOnCall.id} not found after save.`,
-      );
+    if (!onCall) {
+      onCall = this.onCallRepository.create({
+        date,
+        specialty: user.specialty,
+        details: '',
+        isStaffSufficient: false,
+      });
+      onCall = await this.onCallRepository.save(onCall);
     }
-    return result;
+
+    // 2. Create OnCallAssignment for this user if not already assigned
+    let assignment = await this.onCallAssignmentRepository.findOne({
+      where: { onCallId: onCall.id, userId: user.id },
+    });
+    if (!assignment) {
+      assignment = this.onCallAssignmentRepository.create({
+        onCall,
+        onCallId: onCall.id,
+        user,
+        userId: user.id,
+        assignedRole: user.role,
+        startTime: '00:00:00',
+        endTime: '23:59:00',
+      });
+      await this.onCallAssignmentRepository.save(assignment);
+    }
+
+    // 3. Check if we have 1 medic, 1 rezident, 1 asistent
+    const assignments = await this.onCallAssignmentRepository.find({
+      where: { onCallId: onCall.id },
+      relations: ['user'],
+    });
+    const roles = assignments.map((a) => a.user.role);
+    const hasMedic = roles.includes(UserRole.MEDIC);
+    const hasRezident = roles.includes(UserRole.REZIDENT);
+    const hasAsistent = roles.includes(UserRole.ASISTENT);
+
+    onCall.isStaffSufficient = hasMedic && hasRezident && hasAsistent;
+    await this.onCallRepository.save(onCall);
+
+    // Return updated onCall with assignments
+    const updatedOnCall = await this.onCallRepository.findOne({
+      where: { id: onCall.id },
+      relations: ['assignments', 'assignments.user'],
+    });
+    if (!updatedOnCall) {
+      throw new NotFoundException('OnCall not found after assignment');
+    }
+    return updatedOnCall;
   }
 
   async getCalendarByMonth(monthYear: string): Promise<any> {
@@ -122,8 +137,15 @@ export class OnCallService {
     date: string,
     specialty: string,
   ): Promise<any> {
+    const dayStart = new Date(date);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(date);
+    dayEnd.setHours(23, 59, 59, 999);
+
     const onCall = await this.onCallRepository.findOne({
-      where: { date: new Date(date), specialty },
+      where: {
+        specialty,
+      },
       relations: ['assignments', 'assignments.user'],
     });
 
@@ -149,6 +171,7 @@ export class OnCallService {
     return {
       data: date,
       specialitate: onCall.specialty,
+      id: onCall.id,
       detalii: {
         program: programInterval,
         personal_suficient: onCall.isStaffSufficient,
@@ -161,6 +184,70 @@ export class OnCallService {
           specialitate_medic: a.user.specialty,
         })),
       },
+    };
+  }
+
+  // ...existing code...
+
+  async getUserOnCallDaysForMonth(
+    userId: number,
+    monthYear: string,
+  ): Promise<{ days: string[] }> {
+    const [year, month] = monthYear.split('-').map(Number);
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0);
+
+    // Find all assignments for this user in the given month
+    const assignments = await this.onCallAssignmentRepository.find({
+      where: {
+        userId,
+      },
+      relations: ['onCall'],
+    });
+
+    // Filter assignments to those within the month
+    const daysSet = new Set<string>();
+    assignments.forEach((assignment) => {
+      const onCallDate =
+        assignment.onCall?.date instanceof Date
+          ? assignment.onCall.date
+          : new Date(assignment.onCall?.date);
+      if (onCallDate >= startDate && onCallDate <= endDate) {
+        daysSet.add(onCallDate.toISOString().split('T')[0]);
+      }
+    });
+
+    return { days: Array.from(daysSet) };
+  }
+
+  async getOnCallDetailsById(onCallId: number): Promise<any> {
+    const onCall = await this.onCallRepository.findOne({
+      where: { id: onCallId },
+      relations: ['assignments', 'assignments.user'],
+    });
+
+    if (!onCall) {
+      throw new NotFoundException(
+        `On-call entry with id ${onCallId} not found.`,
+      );
+    }
+
+    return {
+      id: onCall.id,
+      date: onCall.date,
+      specialty: onCall.specialty,
+      details: onCall.details,
+      isStaffSufficient: onCall.isStaffSufficient,
+      assignments: onCall.assignments.map((a) => ({
+        id: a.user.id,
+        name: `${a.user.lastName} ${a.user.firstName}`,
+        role: a.user.role,
+        parafa: a.user.parafa,
+        specialty: a.user.specialty,
+        assignmentId: a.id,
+        startTime: a.startTime,
+        endTime: a.endTime,
+      })),
     };
   }
 }

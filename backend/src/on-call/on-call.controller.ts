@@ -6,27 +6,32 @@ import {
   UseGuards,
   Post,
   Body,
-  HttpCode,
-  HttpStatus,
 } from '@nestjs/common';
 import { OnCallService } from './on-call.service';
 import { GetOnCallCalendarDto } from './dto/get-on-call-calendar.dto';
-import { CreateOnCallDto } from './dto/create-on-call.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../user/user.entity';
+import { Req } from '@nestjs/common';
 
 @Controller('api/garda')
 @UseGuards(JwtAuthGuard)
 export class OnCallController {
   constructor(private readonly onCallService: OnCallService) {}
 
-  @Get()
-  async getCalendarByMonth(
-    @Query() query: GetOnCallCalendarDto,
-  ): Promise<ReturnType<OnCallService['getCalendarByMonth']>> {
-    return this.onCallService.getCalendarByMonth(query.luna);
+  @Get('my-days')
+  async getMyOnCallDays(
+    @Req() req: { user: { userId: number; role: UserRole } },
+    @Query('month') month: string,
+  ): Promise<{ days: string[] }> {
+    const userId: number = req.user?.userId ?? 1;
+    return this.onCallService.getUserOnCallDaysForMonth(userId, month);
+  }
+
+  @Get('details/:onCallId')
+  async getOnCallDetails(
+    @Param('onCallId') onCallId: number,
+  ): Promise<ReturnType<OnCallService['getOnCallDetailsById']>> {
+    return this.onCallService.getOnCallDetailsById(onCallId);
   }
 
   @Get(':data/:specialitate')
@@ -37,12 +42,26 @@ export class OnCallController {
     return this.onCallService.getDetailsByDateAndSpecialty(date, specialty);
   }
 
-  // Example Admin route to create/update an on-call slot
-  @Post()
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN) // Only admins can define on-call slots
-  @HttpCode(HttpStatus.CREATED)
-  async createOrUpdateOnCallSlot(@Body() createOnCallDto: CreateOnCallDto) {
-    return this.onCallService.createOrUpdateOnCall(createOnCallDto);
+  @Get()
+  async getCalendarByMonth(
+    @Query() query: GetOnCallCalendarDto,
+  ): Promise<ReturnType<OnCallService['getCalendarByMonth']>> {
+    return this.onCallService.getCalendarByMonth(query.luna);
+  }
+
+  // // Example Admin route to create/update an on-call slot
+  // @Post()
+  // @UseGuards(RolesGuard)
+  // @HttpCode(HttpStatus.CREATED)
+  // async createOrUpdateOnCallSlot(@Body() createOnCallDto: OnCallAssignmentDto) {
+  //   return this.onCallService.createOrUpdateOnCall(createOnCallDto);
+  // }
+  // In your controller
+  @Post('auto-assign')
+  async autoAssign(
+    @Body('userId') userId: number,
+    @Body('date') date: string, // expects YYYY-MM-DD
+  ) {
+    return this.onCallService.autoAssignUserToOnCall(userId, date);
   }
 }

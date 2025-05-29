@@ -6,6 +6,8 @@ import { CreateLeaveRequestDto } from './dto/create-leaverequest.dto';
 import { UpdateLeaveRequestStatusDto } from './dto/update-leaverequest-status.dto';
 import { User } from '../user/user.entity';
 
+import { NotificationService } from '../notification/notification.service'; // Add this import
+
 @Injectable()
 export class LeaveRequestService {
   constructor(
@@ -13,6 +15,7 @@ export class LeaveRequestService {
     private leaveRequestRepository: Repository<LeaveRequest>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    private notificationService: NotificationService, // Inject here
   ) {}
 
   async create(
@@ -85,6 +88,13 @@ export class LeaveRequestService {
     leaveRequest.approvedBy = adminUser;
     leaveRequest.approvedById = adminUser.id;
     leaveRequest.approvedAt = new Date();
+
+    await this.notificationService.create({
+      userId: leaveRequest.userId,
+      title: 'Leave Request Status Updated',
+      message: `Your leave request for ${leaveRequest.startDate.toLocaleDateString()} - ${leaveRequest.endDate.toLocaleDateString()} was ${leaveRequest.status.toLowerCase()}.`,
+      isRead: false,
+    });
 
     return this.leaveRequestRepository.save(leaveRequest);
   }

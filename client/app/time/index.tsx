@@ -131,9 +131,9 @@ export default function PontajScreen() {
         <TimeDisplay label="Check-out" time={checkOutTime} />
       </View>
 
-      <View style={styles.validateContainer}>
+      {/* <View style={styles.validateContainer}>
         <ValidateButton onPress={handleValidate} disabled={!canValidate} />
-      </View>
+      </View> */}
     </ScrollView>
   );
 }

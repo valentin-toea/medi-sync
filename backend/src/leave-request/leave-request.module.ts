@@ -6,6 +6,7 @@ import { LeaveRequestController } from './leave-request.controller';
 import { LeaveRequest } from './leave-request.entity';
 import { User } from '../user/user.entity';
 import { AuthModule } from '../auth/auth.module';
+import { NotificationService } from 'src/notification/notification.service';
 
 @Module({
   imports: [
@@ -16,6 +17,6 @@ import { AuthModule } from '../auth/auth.module';
     AuthModule,
   ],
   controllers: [LeaveRequestController],
-  providers: [LeaveRequestService],
+  providers: [LeaveRequestService, NotificationService],
 })
 export class LeaveRequestModule {}

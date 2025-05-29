@@ -5,6 +5,10 @@ import MonthSelector from "../../components/MonthSelector";
 import GuardDayItem from "../../components/GuardDayItem";
 import { useState } from "react";
 import React from "react";
+import { useAuthStore } from "@/store/auth.store";
+import api from "@/services/api";
+import { useEffect } from "react";
+import { Alert } from "react-native";
 
 interface GuardDay {
   id: string;
@@ -12,7 +16,6 @@ interface GuardDay {
   dayName: string;
   dayOfWeek: string;
   daySlotAvailable: boolean;
-  nightSlotAvailable: boolean;
 }
 
 export default function TimesheetScreen() {
@@ -21,6 +24,44 @@ export default function TimesheetScreen() {
   const [guardDays, setGuardDays] = useState<GuardDay[]>(
     generateGuardDaysForMonth(month, year)
   );
+  const [assignedDays, setAssignedDays] = useState<string[]>([]);
+  const userDetails = useAuthStore((state) => state.userDetails);
+  
+  useEffect(() => {
+    async function fetchAssignedDays() {
+      const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
+      try {
+        const res = await api.get(`/api/garda/my-days?month=${monthStr}`);
+        setAssignedDays(res.data.days); // e.g. ["2025-06-01", ...]
+      } catch (err) {
+        console.log("Error fetching assigned days:", err);
+      }
+    }
+    fetchAssignedDays();
+  }, [month, year]);
+
+    const handleAssign = (dateStr: string) => {
+      Alert.alert(
+        "Confirm Assignment",
+        `Assign yourself to guard on ${dateStr}?`,
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Yes",
+            onPress: async () => {
+              await api.post("/api/garda/auto-assign", {
+                userId: userDetails?.id ?? 1,
+                date: dateStr,
+              });
+              // Refresh assigned days
+              const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
+              const res = await api.get(`/api/garda/my-days?month=${monthStr}`);
+              setAssignedDays(res.data.days);
+            },
+          },
+        ]
+      );
+    };
 
   const handleMonthChange = (newMonth: number, newYear: number) => {
     setMonth(newMonth);
@@ -38,16 +79,6 @@ export default function TimesheetScreen() {
     );
   };
 
-  const toggleNightSlot = (id: string) => {
-    setGuardDays(
-      guardDays.map((day) =>
-        day.id === id
-          ? { ...day, nightSlotAvailable: !day.nightSlotAvailable }
-          : day
-      )
-    );
-  };
-
   return (
     <View style={styles.container}>
       <Header title="On-call duty" showBack={false} />
@@ -59,16 +90,22 @@ export default function TimesheetScreen() {
       <FlatList
         data={guardDays}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <GuardDayItem
-            day={item.day}
-            dayName={item.dayName}
-            daySlotAvailable={item.daySlotAvailable}
-            nightSlotAvailable={item.nightSlotAvailable}
-            onToggleDaySlot={() => toggleDaySlot(item.id)}
-            onToggleNightSlot={() => toggleNightSlot(item.id)}
-          />
-        )}
+        renderItem={({ item }) => {
+          const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(item.day).padStart(2, '0')}`;
+          const isAssigned = assignedDays.includes(dateStr);
+      
+          return (
+            <GuardDayItem
+              day={item.day}
+              dayName={item.dayName}
+              daySlotAvailable={isAssigned} // checked if assigned
+              onToggleDaySlot={() => {
+                if (!isAssigned) handleAssign(dateStr);
+              }}
+              disabled={isAssigned}
+            />
+          );
+        }}
         contentContainerStyle={styles.listContent}
       />
     </View>
@@ -81,13 +118,7 @@ function generateGuardDaysForMonth(month: number, year: number): GuardDay[] {
   const days: GuardDay[] = [];
 
   const dayNames = [
-    "Sunday",
-    "Mondey",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
+    "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
   ];
   const shortDayNames = ["Sun", "Mon", "Tues", "Wed", "Thurs", "Fri", "Sat"];
 
@@ -100,8 +131,7 @@ function generateGuardDaysForMonth(month: number, year: number): GuardDay[] {
       day: i,
       dayName: dayNames[dayOfWeek],
       dayOfWeek: shortDayNames[dayOfWeek],
-      daySlotAvailable: Math.random() > 0.7, // Random initial state for demo
-      nightSlotAvailable: Math.random() > 0.7, // Random initial state for demo
+      daySlotAvailable: false, // always false, will be set in render
     });
   }
 
