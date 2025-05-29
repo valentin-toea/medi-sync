@@ -1,6 +1,13 @@
 import React, { useState } from "react";
-import { StyleSheet, View, ScrollView, TouchableOpacity } from "react-native";
-import { Colors, SegmentedControl, Text } from "react-native-ui-lib";
+import {
+  StyleSheet,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Alert,
+} from "react-native";
+import { Colors, SegmentedControl, Text, Button } from "react-native-ui-lib";
 import { CustomCard } from "@/components/CustomCard";
 import { MaterialIcons } from "@expo/vector-icons";
 import BottomSheet from "@/components/BottomSheet";
@@ -8,16 +15,36 @@ import BottomSheet from "@/components/BottomSheet";
 const ResidencyScreen = () => {
   const [showDetails, setShowDetails] = useState(false);
   const [selectedStage, setSelectedStage] = useState<
-    { name: string } | undefined
+    | {
+        name: string;
+        dates?: string;
+        location?: string;
+        supervisor?: string;
+        isFuture?: boolean;
+      }
+    | undefined
   >();
   const [activeTab, setActiveTab] = useState(0);
+  const [formInput, setFormInput] = useState("");
+
+  const handleFormSubmit = () => {
+    Alert.alert("Stage registration completed!");
+    setShowDetails(false);
+    setFormInput("");
+  };
 
   const renderCurrentStage = () => (
     <View>
       <Text style={styles.sectionTitle}>Current Stage</Text>
       <TouchableOpacity
         onPress={() => {
-          setSelectedStage({ name: "Pediatrics Rotation" });
+          setSelectedStage({
+            name: "Pediatrics Rotation",
+            dates: "01.01.2025 - 05.05.2025",
+            location: "Bucharest Children's Hospital",
+            supervisor: "Dr. Adriana Ionescu",
+            isFuture: false,
+          });
           setShowDetails(true);
         }}
       >
@@ -44,13 +71,21 @@ const ResidencyScreen = () => {
         <TouchableOpacity
           key={i}
           onPress={() => {
-            setSelectedStage({ name: `Stage ${i}` });
+            setSelectedStage({
+              name: `Stage ${i}`,
+              dates: `06.0${i + 6}.2025 - 30.0${i + 6}.2025`,
+              location: "University Hospital",
+              supervisor: "Dr. Andrei Popescu",
+              isFuture: false,
+            });
             setShowDetails(true);
           }}
         >
           <CustomCard style={{ marginBottom: 12 }}>
             <Text style={styles.cardTitle}>Stage {i}</Text>
-            <Text style={styles.cardDate}>06.05.2025 - 30.06.2025</Text>
+            <Text style={styles.cardDate}>
+              06.0{i + 6}.2025 - 30.0{i + 6}.2025
+            </Text>
             <View style={styles.locationRow}>
               <MaterialIcons
                 name="location-on"
@@ -67,11 +102,58 @@ const ResidencyScreen = () => {
     </View>
   );
 
-  const renderFutureStages = () => (
-    <View>
-      <Text style={styles.sectionTitle}>Coming soon...</Text>
-    </View>
-  );
+  const renderFutureStages = () => {
+    const futureStages = [
+      {
+        name: "Cardiology Rotation",
+        dates: "01.07.2025 - 31.08.2025",
+        location: "Cardiology Institute Bucharest",
+        supervisor: "Dr. Mihaela Tudor",
+      },
+      {
+        name: "Emergency Medicine",
+        dates: "01.09.2025 - 30.09.2025",
+        location: "Bucharest Emergency Hospital",
+        supervisor: "Dr. George Mureșan",
+      },
+      {
+        name: "Surgery Rotation",
+        dates: "01.10.2025 - 30.11.2025",
+        location: "University Hospital",
+        supervisor: "Dr. Sorin Ionescu",
+      },
+    ];
+
+    return (
+      <View>
+        <Text style={styles.sectionTitle}>Future Stages</Text>
+        {futureStages.map((stage, index) => (
+          <TouchableOpacity
+            key={index}
+            onPress={() => {
+              setSelectedStage({ ...stage, isFuture: true });
+              setShowDetails(true);
+            }}
+          >
+            <CustomCard style={{ marginBottom: 12 }}>
+              <Text style={styles.cardTitle}>{stage.name}</Text>
+              <Text style={styles.cardDate}>{stage.dates}</Text>
+              <View style={styles.locationRow}>
+                <MaterialIcons
+                  name="location-on"
+                  size={18}
+                  color="#687076"
+                  style={{ marginRight: 6 }}
+                />
+                <Text style={styles.locationText}>{stage.location}</Text>
+              </View>
+              <Text style={styles.supervisor}>{stage.supervisor}</Text>
+            </CustomCard>
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -90,9 +172,40 @@ const ResidencyScreen = () => {
       </ScrollView>
 
       <BottomSheet visible={showDetails} onClose={() => setShowDetails(false)}>
-        <Text style={{ fontWeight: "500", fontSize: 16 }}>
-          Details about {selectedStage?.name}
+        <Text style={{ fontWeight: "500", fontSize: 16, marginBottom: 8 }}>
+          {selectedStage?.name}
         </Text>
+        {selectedStage?.dates && (
+          <Text style={{ marginBottom: 4, color: "#687076" }}>
+            Dates: {selectedStage.dates}
+          </Text>
+        )}
+        {selectedStage?.location && (
+          <Text style={{ marginBottom: 4, color: "#687076" }}>
+            Location: {selectedStage.location}
+          </Text>
+        )}
+        {selectedStage?.supervisor && (
+          <Text style={{ marginBottom: 12, color: "#687076" }}>
+            Supervisor: {selectedStage.supervisor}
+          </Text>
+        )}
+
+        {selectedStage?.isFuture && (
+          <>
+            <TextInput
+              placeholder="Add optional notes..."
+              style={styles.input}
+              value={formInput}
+              onChangeText={setFormInput}
+            />
+            <Button
+              label="Confirm Stage"
+              backgroundColor={Colors.green20}
+              onPress={handleFormSubmit}
+            />
+          </>
+        )}
       </BottomSheet>
     </View>
   );
@@ -153,9 +266,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 100,
   },
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+  input: {
+    borderWidth: 1,
+    borderColor: "#D0D5DD",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 16,
+    fontSize: 14,
   },
 });
