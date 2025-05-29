@@ -9,6 +9,7 @@ import { useAuthStore } from "@/store/auth.store";
 import api from "@/services/api";
 import { useEffect } from "react";
 import { Alert } from "react-native";
+import { Text } from "react-native-ui-lib";
 
 interface GuardDay {
   id: string;
@@ -81,7 +82,7 @@ export default function TimesheetScreen() {
 
   return (
     <View style={styles.container}>
-      <Header title="On-call duty" showBack={false} />
+      <Text style={styles.title}>Duty</Text>
       <HospitalInfo name="University Hospital" />
       <MonthSelector onMonthChange={handleMonthChange} />
 
@@ -143,13 +144,20 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "white",
   },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    marginBottom: 12,
+    marginTop: 20,
+    paddingHorizontal: 20,
+  },
   divider: {
     height: 1,
     backgroundColor: "#EEEEEE",
     marginVertical: 8,
   },
   listContent: {
-    paddingHorizontal: 16,
     paddingBottom: 100,
+    paddingHorizontal: 20,
   },
 });

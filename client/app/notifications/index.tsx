@@ -1,38 +1,58 @@
 import { CustomCard } from "@/components/CustomCard";
+import { useNotificationsStore } from "@/store/notification.store";
 import React from "react";
-import { FlatList, StyleSheet, Text, View } from "react-native";
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Colors } from "react-native-ui-lib";
 
-const notifications = [
-  {
-    id: "1",
-    title: "Appointment Reminder",
-    message: "You have an appointment tomorrow at 9:00 AM.",
-  },
-  {
-    id: "2",
-    title: "New Message",
-    message: "Dr. Smith sent you a message regarding your last checkup.",
-  },
-  {
-    id: "3",
-    title: "Lab Results Ready",
-    message: "Your recent blood test results are now available.",
-  },
-];
-
 export default function NotificationScreen() {
+  const notifications = useNotificationsStore((state) => state.notifications);
+  const error = useNotificationsStore((state) => state.error);
+  const markAsRead = useNotificationsStore((state) => state.markAsRead);
+
+  if (error)
+    return (
+      <View>
+        <Text>{error}</Text>
+      </View>
+    );
+
   return (
     <View style={styles.container}>
       <FlatList
         data={notifications}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
-          <CustomCard>
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.message}>{item.message}</Text>
-          </CustomCard>
+          <TouchableOpacity onPress={() => markAsRead(item.id)}>
+            <CustomCard>
+              <Text style={styles.title}>{item.titlu}</Text>
+              <Text style={styles.message}>{item.mesaj}</Text>
+              <Text
+                style={{
+                  ...styles.message,
+                  alignSelf: "flex-end",
+                  color: "black",
+                  marginTop: 5,
+                }}
+              >{`${item.data_trimitere.split("T")[1].split(".")[0] ?? ""} -  ${
+                item.data_trimitere.split("T")[0]
+              }`}</Text>
+              <Text
+                style={{
+                  ...styles.message,
+                  color: item.citit ? Colors.grey30 : Colors.green30,
+                }}
+              >
+                {item.citit ? "Read" : "New"}
+              </Text>
+            </CustomCard>
+          </TouchableOpacity>
         )}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
